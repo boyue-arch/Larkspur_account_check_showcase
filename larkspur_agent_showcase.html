@@ -1,0 +1,1769 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Larkspur account-health agent | Group 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Overpass:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F3F4F1; --surface:#FFFFFF; --sunk:#E9ECE7; --ink:#1E2830; --ink2:#55606A; --ink3:#8A939B;
+  --rule:#D9DDD7; --rule2:#C2C8C1;
+  --call:#C2381E; --marcus:#A26F00; --owner:#2C5DA8; --ignore:#98A1A8; --hit:#2D7A4C;
+  --call-bg:#F7E3DE; --marcus-bg:#F5ECD5; --owner-bg:#E1E9F5; --ignore-bg:#ECEEEF; --hit-bg:#DDEEE3;
+  --mark:#FFE07A; --focus:#2C5DA8;
+  --f:"Overpass","Helvetica Neue",Helvetica,Arial,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --paper:#13181D; --surface:#1A2127; --sunk:#0F1418; --ink:#E6EAED; --ink2:#A9B3BB; --ink3:#76828B;
+    --rule:#29333B; --rule2:#3A4650;
+    --call:#E35A3E; --marcus:#D9A43C; --owner:#6E9ADD; --ignore:#6E7983; --hit:#55B27D;
+    --call-bg:#3B211B; --marcus-bg:#332A19; --owner-bg:#1B2A3D; --ignore-bg:#222A31; --hit-bg:#1B3325;
+    --mark:rgba(255,212,84,.30); --focus:#8DB3EA;
+    color-scheme:dark;
+  }
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important;animation:none!important}}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--f);font-size:17px;line-height:1.5;
+  font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+button,input,select{font-family:inherit;font-size:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:2px}
+.wrap{max-width:1200px;margin:0 auto;padding:0 32px}
+.wrap.wide{max-width:1440px}
+strong,b{font-weight:700}
+mark{background:linear-gradient(transparent 52%,var(--mark) 52%);color:inherit;padding:0 .08em}
+.muted{color:var(--ink2)} .faint{color:var(--ink3)}
+.small{font-size:14px;line-height:1.45} .tiny{font-size:12.5px;line-height:1.4}
+.num{font-weight:800;letter-spacing:-.02em}
+
+/* nav */
+.nav{position:sticky;top:0;z-index:40;background:color-mix(in srgb,var(--paper) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--rule)}
+.nav .wrap{display:flex;align-items:center;gap:24px;height:54px}
+.brand{font-weight:800;letter-spacing:-.01em;white-space:nowrap;text-decoration:none}
+.brand span{font-weight:400;color:var(--ink2);margin-left:8px}
+.nav ul{display:flex;gap:2px;list-style:none;margin:0 0 0 auto;padding:0;overflow-x:auto;scrollbar-width:none}
+.nav a.l{display:block;padding:6px 10px;font-size:14px;color:var(--ink2);text-decoration:none;border-radius:3px;white-space:nowrap}
+.nav a.l:hover,.nav a.l.on{color:var(--ink);background:var(--sunk)}
+.nav a.run{color:var(--surface);background:var(--ink);font-weight:700}
+.nav a.run:hover{background:var(--ink);color:var(--surface);opacity:.88}
+
+/* hero */
+.hero{display:grid;grid-template-columns:1.15fr .85fr;gap:56px;align-items:center;padding-top:72px;padding-bottom:88px}
+h1{font-size:clamp(42px,5.6vw,74px);line-height:1.0;letter-spacing:-.035em;font-weight:900;margin:0 0 26px}
+h1 .two{display:block;color:var(--ink2);font-weight:300}
+.lede{font-size:21px;line-height:1.45;max-width:34em;margin:0 0 32px;color:var(--ink)}
+.cta{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:44px}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border:1px solid var(--rule2);background:var(--surface);border-radius:4px;
+  font-weight:600;text-decoration:none;cursor:pointer;font-size:15px;line-height:1.2}
+.btn:hover{border-color:var(--ink3)}
+.btn.primary{background:var(--ink);border-color:var(--ink);color:var(--surface)}
+.btn.primary:hover{opacity:.9}
+.btn.sm{padding:6px 11px;font-size:13.5px}
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-top:1px solid var(--rule)}
+.facts div{padding:16px 18px 0 0}
+.facts div+div{padding-left:18px;border-left:1px solid var(--rule)}
+.facts b{display:block;font-size:30px;font-weight:800;letter-spacing:-.03em;line-height:1.1}
+.facts span{font-size:14px;color:var(--ink2);line-height:1.4;display:block;margin-top:4px}
+.dots{margin:0}
+#dotgrid{display:grid;grid-template-columns:repeat(30,1fr);gap:3px;max-width:460px;margin-left:auto}
+#dotgrid i{display:block;aspect-ratio:1;background:var(--ink3);opacity:.28;border-radius:1px;transition:opacity .9s ease,background-color .5s ease,transform .5s ease}
+#dotgrid.done i{opacity:.11}
+#dotgrid.done i.k{opacity:1;transform:scale(1.25)}
+.dots figcaption{max-width:460px;margin-left:auto;margin-top:18px;display:grid;grid-template-columns:repeat(2,1fr);gap:6px 18px;font-size:14px}
+.dots figcaption .src{grid-column:1/-1;color:var(--ink3);font-size:12.5px;margin-top:6px}
+
+/* verdict marks */
+.sw{display:inline-block;width:10px;height:10px;border-radius:1px;flex:none}
+.c-call{color:var(--call)} .c-marcus{color:var(--marcus)} .c-owner{color:var(--owner)} .c-ignore{color:var(--ignore)}
+.b-call{background:var(--call)} .b-marcus{background:var(--marcus)} .b-owner{background:var(--owner)} .b-ignore{background:var(--ignore)}
+.vd{display:inline-flex;align-items:center;gap:7px;font-weight:700;white-space:nowrap}
+.legend-row{display:flex;align-items:center;gap:8px}
+.legend-row b{font-weight:800}
+
+/* sections */
+.sec{padding:96px 0;border-top:1px solid var(--rule)}
+.sec.alt{background:var(--surface)}
+h2{font-size:clamp(30px,3.6vw,46px);line-height:1.08;letter-spacing:-.028em;font-weight:800;margin:0 0 14px;max-width:22em}
+.dek{font-size:19px;color:var(--ink2);margin:0 0 48px;max-width:40em;line-height:1.45}
+h3{font-size:21px;letter-spacing:-.01em;margin:0 0 10px;font-weight:700;line-height:1.25}
+h4{font-size:15px;margin:0 0 6px;font-weight:700}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:56px}
+
+/* problem */
+.tiles{display:grid;grid-template-columns:repeat(7,1fr);gap:22px 10px;max-width:520px}
+.tile{aspect-ratio:1;border:2px solid var(--ink);position:relative;border-radius:2px}
+.tile.vis{background:var(--ink)}
+.tile.late::after{content:"";position:absolute;left:-2px;right:-2px;bottom:-10px;height:4px;background:var(--call)}
+.tlegend{display:flex;flex-direction:column;gap:10px;margin-top:30px;font-size:15px}
+.tlegend .k{display:inline-block;width:16px;height:16px;border:2px solid var(--ink);vertical-align:-3px;margin-right:10px;border-radius:1px}
+.tlegend .k.f{background:var(--ink)} .tlegend .k.r{border:0;height:4px;width:16px;background:var(--call);vertical-align:3px}
+.stat-list{display:flex;flex-direction:column;gap:0}
+.stat{display:grid;grid-template-columns:190px 1fr;gap:20px;padding:20px 0;border-bottom:1px solid var(--rule);align-items:baseline}
+.stat:first-child{border-top:1px solid var(--rule)}
+.stat .n{font-size:34px;font-weight:800;letter-spacing:-.035em;line-height:1}
+.stat p{margin:0}
+.thesis{margin-top:56px;font-size:clamp(24px,2.6vw,32px);line-height:1.25;letter-spacing:-.02em;font-weight:300;max-width:26em}
+.thesis b{font-weight:800}
+.foot{font-size:13px;color:var(--ink3);margin-top:14px}
+
+/* discovery */
+.need{display:grid;grid-template-columns:110px 1fr;gap:10px 24px;margin:0 0 64px;padding:28px 0;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+.need dt{font-size:14px;color:var(--ink2);padding-top:5px}
+.need dd{margin:0;font-size:20px;line-height:1.4}
+.need dd.old{color:var(--ink3);text-decoration:line-through;text-decoration-thickness:1px}
+.need dd.new{font-weight:700}
+.finder{display:grid;grid-template-columns:320px 1fr;gap:0;border:1px solid var(--rule);background:var(--surface);border-radius:4px;min-height:360px}
+.flist{list-style:none;margin:0;padding:8px 0;border-right:1px solid var(--rule)}
+.flist .grp{padding:14px 20px 6px;font-size:13px;color:var(--ink3)}
+.flist button{all:unset;box-sizing:border-box;display:block;width:100%;padding:9px 20px;cursor:pointer;font-size:15.5px;line-height:1.3;border-left:3px solid transparent}
+.flist button:hover{background:var(--sunk)}
+.flist button[aria-selected=true]{border-left-color:var(--ink);background:var(--sunk);font-weight:700}
+.flist button:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
+.fbody{padding:34px 40px}
+.fbody .q{font-size:14px;color:var(--ink2);margin:0 0 20px}
+.fbody .q b{color:var(--ink);font-weight:600}
+.fbody .big{font-size:26px;line-height:1.25;letter-spacing:-.02em;font-weight:700;margin:0 0 28px;max-width:22em}
+.fbody .arrow{display:grid;grid-template-columns:150px 1fr;gap:18px;border-top:1px solid var(--rule);padding-top:20px}
+.fbody .arrow span{font-size:14px;color:var(--ink2)}
+.tag{display:inline-block;font-size:12.5px;line-height:1;padding:4px 7px;border:1px solid var(--rule2);border-radius:3px;color:var(--ink2);white-space:nowrap;font-weight:600}
+.tag.open{border-color:var(--marcus);color:var(--marcus)}
+.tag.fix{border-color:var(--hit);color:var(--hit)}
+.tag.prop{border-style:dashed}
+.tags{display:flex;gap:6px;flex-wrap:wrap}
+.assume{display:grid;grid-template-columns:repeat(3,auto);justify-content:start;gap:16px 48px;margin-top:40px}
+.assume div{display:flex;align-items:baseline;gap:12px}
+.assume b{font-size:34px;font-weight:800;letter-spacing:-.03em}
+
+/* process */
+.steps{display:grid;grid-template-columns:repeat(6,1fr);gap:0;border-bottom:1px solid var(--rule2)}
+.steps button{all:unset;box-sizing:border-box;cursor:pointer;padding:0 14px 18px 0;position:relative;display:flex;flex-direction:column;gap:4px}
+.steps button::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:3px;background:transparent}
+.steps button[aria-selected=true]::after{background:var(--ink)}
+.steps .sn{font-size:13px;color:var(--ink3);font-weight:700}
+.steps .st{font-size:17px;font-weight:700;line-height:1.2}
+.steps .sd{font-size:13.5px;color:var(--ink2)}
+.steps button:hover .st{text-decoration:underline;text-underline-offset:3px}
+.steps button:focus-visible{outline:2px solid var(--focus)}
+.stage{display:grid;grid-template-columns:1fr 300px;gap:56px;padding-top:36px;min-height:260px}
+.stage ul{margin:0;padding:0;list-style:none}
+.stage li{padding:12px 0 12px 22px;border-bottom:1px solid var(--rule);position:relative;font-size:17.5px}
+.stage li::before{content:"";position:absolute;left:0;top:24px;width:8px;height:2px;background:var(--ink3)}
+.stage aside .kn{font-size:52px;font-weight:900;letter-spacing:-.04em;line-height:1}
+.stage aside .kl{color:var(--ink2);font-size:15px;margin:6px 0 24px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:13px;padding:3px 8px;background:var(--sunk);border-radius:3px;color:var(--ink2)}
+.lineage{margin-top:48px;width:100%;border-collapse:collapse;font-size:15px}
+.lineage th,.lineage td{text-align:left;padding:10px 12px 10px 0;border-bottom:1px solid var(--rule);vertical-align:top}
+.lineage th{font-weight:600;color:var(--ink2);font-size:13.5px}
+.lineage td:first-child{font-weight:700;width:130px}
+.lineage .fin{font-weight:800}
+
+/* how it decides */
+.pipe{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:1px solid var(--rule);border-radius:4px;background:var(--surface)}
+.pipe > div{padding:28px 28px 30px}
+.pipe > div+div{border-left:1px solid var(--rule)}
+.pipe .pn{font-size:13px;font-weight:700;color:var(--ink3);margin-bottom:10px}
+.pipe p{margin:0;font-size:16px;color:var(--ink2)}
+.formula{font-size:17px;margin:12px 0 10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.frac{display:inline-flex;flex-direction:column;align-items:center;font-size:15px;line-height:1.25}
+.frac span:first-child{border-bottom:1.5px solid var(--ink);padding:0 4px 2px}
+.frac span:last-child{padding-top:2px}
+.verdicts{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:40px;border-top:1px solid var(--rule)}
+.verdicts > div{padding:22px 22px 0 0}
+.verdicts > div+div{padding-left:22px;border-left:1px solid var(--rule)}
+.verdicts .vn{font-size:22px;font-weight:800;letter-spacing:-.015em;display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.verdicts .vn .sw{width:14px;height:14px}
+.verdicts p{margin:0;font-size:15px;color:var(--ink2)}
+.verdicts .to{font-size:14px;margin-top:10px;color:var(--ink)}
+.never{margin-top:56px;display:grid;grid-template-columns:200px 1fr;gap:24px}
+.never ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:0 28px}
+.never li{padding:10px 0;border-bottom:1px solid var(--rule);font-size:15.5px}
+
+/* console */
+#console{background:var(--sunk)}
+.con{border:1px solid var(--rule2);background:var(--surface);border-radius:6px;overflow:hidden}
+.conbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:14px 18px;border-bottom:1px solid var(--rule)}
+.score{display:flex;align-items:baseline;gap:10px;margin-right:auto}
+.score .sv{font-size:30px;font-weight:900;letter-spacing:-.03em;line-height:1}
+.score .sl{font-size:14px;color:var(--ink2)}
+.strip{display:flex;gap:2px;align-items:center}
+.strip i{width:7px;height:18px;border-radius:1px;display:block}
+.strip i.x{outline:2px solid var(--ink);outline-offset:-2px;opacity:1}
+.srcline{padding:9px 18px;font-size:13px;color:var(--ink2);border-bottom:1px solid var(--rule);background:var(--paper)}
+.srcline .btn{margin-left:8px}
+.srcline b{color:var(--ink);font-weight:600}
+.pol{border-bottom:1px solid var(--rule);background:var(--paper)}
+.pol summary{list-style:none;cursor:pointer;padding:12px 18px;display:flex;align-items:center;gap:12px;font-weight:700;font-size:15px}
+.pol summary::-webkit-details-marker{display:none}
+.pol summary .car{display:inline-block;transition:transform .2s;color:var(--ink3)}
+.pol[open] summary .car{transform:rotate(90deg)}
+.pol summary .pdiff{font-weight:400;font-size:14px;color:var(--ink2)}
+.pol summary .pdiff b{color:var(--call)}
+.polbody{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:0;border-top:1px solid var(--rule)}
+.polbody > div{padding:18px 18px 20px}
+.polbody > div+div{border-left:1px solid var(--rule)}
+.polbody h4{font-size:13.5px;color:var(--ink2);font-weight:700;margin-bottom:12px}
+.knob{display:grid;grid-template-columns:1fr 84px;gap:2px 10px;align-items:center;margin-bottom:12px}
+.knob label{font-size:14px;font-weight:600}
+.knob output{text-align:right;font-weight:800;font-size:15px}
+.knob output.chg{color:var(--call)}
+.knob input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--ink);margin:2px 0 0}
+.knob .kmeta{grid-column:1/-1;display:flex;gap:6px;align-items:center;font-size:12.5px;color:var(--ink3)}
+.sw-row{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;padding:7px 0}
+.tog{all:unset;box-sizing:border-box;cursor:pointer;width:34px;height:20px;border-radius:10px;background:var(--rule2);position:relative;flex:none;margin-top:1px}
+.tog::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--surface);transition:left .15s}
+.tog[aria-checked=true]{background:var(--ink)}
+.tog[aria-checked=true]::after{left:16px}
+.tog:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.sw-row .t{font-size:14px;line-height:1.35}
+.sw-row .t b{font-weight:600}
+.sw-row .t .faint{display:block;font-size:12.5px}
+.presets{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.seg{all:unset;cursor:pointer;font-size:13.5px;padding:6px 10px;border:1px solid var(--rule2);border-radius:3px;font-weight:600;background:var(--surface)}
+.seg[aria-pressed=true]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.seg:focus-visible{outline:2px solid var(--focus)}
+.flips{padding:10px 18px;font-size:14px;border-top:1px solid var(--rule);display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:var(--surface)}
+.flips .fl{all:unset;cursor:pointer;padding:3px 8px;border-radius:3px;background:var(--sunk);font-size:13px}
+.flips .fl:hover{text-decoration:underline}
+
+.cgrid{display:grid;grid-template-columns:280px minmax(0,1fr) 400px;min-height:720px}
+.queue{border-right:1px solid var(--rule);display:flex;flex-direction:column;min-height:0}
+.qtabs{display:flex;border-bottom:1px solid var(--rule)}
+.qtabs button{all:unset;flex:1;text-align:center;padding:10px 4px;cursor:pointer;font-size:13.5px;font-weight:600;color:var(--ink2);border-bottom:2px solid transparent}
+.qtabs button[aria-selected=true]{color:var(--ink);border-bottom-color:var(--ink)}
+.qtabs button:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
+.qtools{padding:10px 12px;border-bottom:1px solid var(--rule);display:flex;flex-direction:column;gap:8px}
+.qtools input[type=search]{width:100%;padding:7px 10px;border:1px solid var(--rule2);border-radius:3px;background:var(--paper);font-size:14px}
+.vf{display:flex;gap:4px;flex-wrap:wrap}
+.vf button{all:unset;cursor:pointer;font-size:12.5px;padding:3px 7px;border-radius:3px;border:1px solid var(--rule);display:inline-flex;align-items:center;gap:5px;font-weight:600}
+.vf button[aria-pressed=true]{border-color:var(--ink);background:var(--sunk)}
+.vf button:focus-visible{outline:2px solid var(--focus)}
+.qlist{list-style:none;margin:0;padding:0;overflow-y:auto;flex:1;max-height:640px}
+.qlist .qd{padding:12px 14px 4px;font-size:12.5px;color:var(--ink3);font-weight:700}
+.qlist button{all:unset;box-sizing:border-box;display:grid;grid-template-columns:4px 1fr auto;gap:10px;width:100%;padding:8px 12px 8px 10px;cursor:pointer;align-items:center}
+.qlist button:hover{background:var(--paper)}
+.qlist button[aria-current=true]{background:var(--sunk)}
+.qlist button:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
+.qlist .bar{align-self:stretch;border-radius:1px}
+.qlist .qn{display:block;font-size:14.5px;font-weight:600;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qlist .qi{display:block;font-size:12px;color:var(--ink3)}
+.qlist .qm{font-size:13px;font-weight:800}
+.qlist .qm.ok{color:var(--hit)} .qlist .qm.no{color:var(--call)}
+.qlist .ed{font-size:11px;color:var(--owner);font-weight:700;margin-left:4px}
+.qlist.pending .bar{background:var(--rule)!important}
+.qlist.pending .qm{visibility:hidden}
+
+.acct{padding:22px 26px 28px;min-width:0;border-right:1px solid var(--rule)}
+.vtabs{display:flex;gap:4px;margin-bottom:18px}
+.ahead{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:6px}
+.ahead h3{font-size:25px;letter-spacing:-.02em;margin:0}
+.ahead .ai{font-size:14px;color:var(--ink2);margin-top:3px}
+.atests{font-size:14.5px;color:var(--ink2);margin:6px 0 18px}
+.atests b{color:var(--ink);font-weight:600}
+.kv{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--rule);border-left:1px solid var(--rule);margin-bottom:18px}
+.kv div{padding:9px 11px;border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);min-width:0}
+.kv dt{font-size:12px;color:var(--ink3);margin-bottom:2px}
+.kv dd{margin:0;font-size:14.5px;font-weight:600;line-height:1.3;overflow-wrap:anywhere}
+.kv dd .d{font-weight:400;color:var(--ink2);font-size:13px;display:block}
+.kv dd.alert{color:var(--call)}
+.chartbox{margin:4px 0 6px}
+.chartbox .ct{display:flex;justify-content:space-between;align-items:baseline;font-size:14px;margin-bottom:2px}
+.chartbox .ct b{font-weight:700}
+.chartbox svg{width:100%;height:auto;display:block}
+.chartbox svg text{font-family:var(--f);font-variant-numeric:tabular-nums}
+.calc{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:14px;border-top:1px solid var(--rule)}
+.calc div{padding:10px 12px 0 0}
+.calc div+div{padding-left:12px;border-left:1px solid var(--rule)}
+.calc .cn{font-size:24px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
+.calc .cl{font-size:12.5px;color:var(--ink2)}
+.panel{margin-top:18px;padding:14px 16px;border:1px solid var(--rule);border-radius:4px;background:var(--paper);font-size:14.5px}
+.panel h4{margin-bottom:8px}
+.cover{height:10px;background:var(--rule);border-radius:2px;position:relative;margin:10px 0 6px}
+.cover i{position:absolute;left:0;top:0;bottom:0;background:var(--ink);border-radius:2px}
+.cover em{position:absolute;top:-5px;bottom:-5px;width:2px;background:var(--call)}
+.edit{margin-top:18px;border-top:1px solid var(--rule);padding-top:16px}
+.wk{width:100%;border-collapse:collapse;font-size:12.5px;table-layout:fixed}
+.wk th{font-weight:600;color:var(--ink3);padding:2px 1px;text-align:center}
+.wk th:first-child{text-align:left;width:62px}
+.wk td{padding:2px 1px}
+.wk input{width:100%;padding:4px 2px;text-align:center;border:1px solid var(--rule2);border-radius:2px;background:var(--surface);font-size:12.5px}
+.ctxf{display:grid;grid-template-columns:repeat(3,1fr);gap:10px 14px;margin-top:14px}
+.ctxf label{display:flex;flex-direction:column;gap:3px;font-size:12.5px;color:var(--ink2);min-width:0}
+.ctxf input,.ctxf select{width:100%;min-width:0;padding:6px 8px;border:1px solid var(--rule2);border-radius:3px;background:var(--surface);font-size:14px;color:var(--ink)}
+.ctxf .chk{flex-direction:row;align-items:center;gap:8px;color:var(--ink)}
+.ctxf .chk input{width:auto}
+
+.dec{padding:22px 22px 28px;min-width:0;background:var(--surface)}
+.vbig{display:flex;align-items:center;gap:12px;font-size:30px;font-weight:900;letter-spacing:-.025em;line-height:1.05;margin:2px 0 10px}
+.vbig .sw{width:20px;height:20px;border-radius:2px}
+.reason{font-size:17px;line-height:1.4;margin:0 0 14px;padding-left:14px;border-left:3px solid var(--rule2)}
+.route{display:grid;grid-template-columns:86px 1fr;gap:6px 10px;font-size:14px;margin-bottom:16px}
+.route dt{color:var(--ink3)} .route dd{margin:0;font-weight:600}
+.record{border:1px solid var(--rule);border-radius:4px;padding:12px 14px;margin-bottom:18px;font-size:14px}
+.record .rh{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:4px}
+.record .why{color:var(--ink2);margin:2px 0 0}
+.match{font-weight:800;font-size:13px;padding:3px 7px;border-radius:3px}
+.match.ok{background:var(--hit-bg);color:var(--hit)} .match.no{background:var(--call-bg);color:var(--call)} .match.na{background:var(--ignore-bg);color:var(--ink2)}
+.record .v1{margin-top:8px;padding-top:8px;border-top:1px solid var(--rule);color:var(--ink2);font-size:13.5px}
+.trace h4{display:flex;justify-content:space-between;align-items:baseline}
+.trace h4 span{font-weight:400;color:var(--ink3);font-size:12.5px}
+.pre{font-size:13px;color:var(--ink2);background:var(--paper);border-radius:3px;padding:8px 10px;margin:0 0 6px}
+.tr{list-style:none;margin:0;padding:0}
+.tr li{border-bottom:1px solid var(--rule)}
+.tr button{all:unset;box-sizing:border-box;display:grid;grid-template-columns:22px 1fr 14px;gap:8px;width:100%;padding:7px 2px;cursor:pointer;align-items:start}
+.tr button:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
+.tr .rn{font-size:12.5px;font-weight:800;color:var(--ink3);padding-top:2px;text-align:right}
+.tr .rt{font-size:14px;font-weight:600;line-height:1.3}
+.tr .rd{display:block;font-size:12.5px;font-weight:400;color:var(--ink2);margin-top:1px}
+.tr .ic{font-size:12px;padding-top:2px;color:var(--ink3)}
+.tr li.skip .rt{color:var(--ink3);font-weight:400}
+.tr li.fire button{background:var(--sunk)}
+.tr li.fire .rn{color:var(--ink)}
+.tr li.fire .rt{font-weight:800}
+.tr li.apply .rt::after{content:" stitched";font-size:11.5px;color:var(--owner);font-weight:700}
+.tr .more{display:none;padding:2px 2px 12px 32px;font-size:13px;color:var(--ink2)}
+.tr li.open .more{display:block}
+.tr .more .tags{margin-top:6px}
+.human{margin-top:20px;padding-top:16px;border-top:1px solid var(--rule)}
+.human .row{display:grid;grid-template-columns:1fr auto;gap:6px}
+.human .row select{grid-column:1/-1}
+.human select,.human input{padding:6px 8px;border:1px solid var(--rule2);border-radius:3px;background:var(--paper);font-size:14px}
+.human input{min-width:0}
+.human .done{margin-top:8px;font-size:13.5px;padding:8px 10px;background:var(--owner-bg);border-radius:3px}
+
+.mlist{width:100%;border-collapse:collapse;font-size:14px}
+.mlist th{text-align:left;font-size:12.5px;color:var(--ink3);font-weight:600;padding:6px 8px 6px 0;border-bottom:1px solid var(--rule2);position:sticky;top:0;background:var(--surface)}
+.mlist td{padding:8px 8px 8px 0;border-bottom:1px solid var(--rule);vertical-align:top}
+.mlist tr.rowlink{cursor:pointer}
+.mlist tr.rowlink:hover td{background:var(--paper)}
+.mlist .nm{font-weight:600}
+.mlist .gh td{padding-top:18px;font-size:13px;font-weight:800;border-bottom:1px solid var(--rule2)}
+.mwrap{max-height:640px;overflow:auto}
+.mix{display:flex;height:10px;border-radius:2px;overflow:hidden;margin:6px 0 14px;background:var(--rule)}
+.mix i{display:block;height:100%}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--surface);padding:11px 16px;border-radius:4px;font-size:14.5px;opacity:0;transition:.25s;z-index:60;max-width:min(560px,92vw);pointer-events:none}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.hidden{display:none!important}
+
+/* results */
+.scale{position:relative;height:120px;margin:40px 0 48px;max-width:980px}
+.scale .ax{position:absolute;left:0;right:0;top:64px;height:2px;background:var(--rule2)}
+.scale .tick{position:absolute;top:76px;font-size:12.5px;color:var(--ink3);transform:translateX(-50%)}
+.scale .band{position:absolute;top:60px;height:10px;background:var(--rule2);border-radius:2px}
+.scale .band span{position:absolute;top:38px;left:0;font-size:12.5px;color:var(--ink2);white-space:nowrap}
+.scale .pin{position:absolute;top:-14px;transform:translateX(-50%);text-align:center}
+.scale .pin b{display:block;font-size:30px;font-weight:900;letter-spacing:-.03em;line-height:1}
+.scale .pin span{font-size:12.5px;color:var(--ink2);white-space:nowrap}
+.scale .pin::after{content:"";display:block;width:2px;height:22px;background:currentColor;margin:4px auto 0}
+.scale .pin.bar{color:var(--ink2);top:1px}
+.scale .pin.bar b{font-size:15px;font-weight:700}
+.causes{border-top:1px solid var(--ink)}
+.cause{display:grid;grid-template-columns:230px 1fr 1.2fr;gap:28px;padding:22px 0;border-bottom:1px solid var(--rule);align-items:start}
+.cause .cn{font-size:19px;font-weight:800;line-height:1.25;letter-spacing:-.01em}
+.cause .cc{font-size:13.5px;color:var(--ink2);margin-top:4px}
+.cause .rows{display:flex;flex-direction:column;gap:8px}
+.crow{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;font-size:15px}
+.crow .flip{display:flex;align-items:center;gap:8px;font-size:13.5px}
+.crow .flip s{color:var(--ink3)}
+.cause .fixt{font-size:15.5px}
+.cause .fixt b{font-weight:700}
+.lesson{margin-top:48px;display:grid;grid-template-columns:200px 1fr;gap:24px;padding:24px 0;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+.lesson p{margin:0;font-size:18px;line-height:1.45;max-width:44em}
+
+/* monday */
+.mon{display:grid;grid-template-columns:1.2fr 1fr;gap:56px;align-items:start}
+.funnel .fnum{display:flex;align-items:baseline;gap:18px;margin-bottom:18px}
+.funnel .fnum b{font-size:72px;font-weight:900;letter-spacing:-.05em;line-height:.9}
+.funnel .fnum span{font-size:28px;color:var(--ink3);font-weight:300}
+.fbar{display:flex;height:34px;border-radius:3px;overflow:hidden;margin-bottom:12px}
+.fbar i{display:block;height:100%}
+.fleg{display:grid;grid-template-columns:repeat(4,auto);gap:6px 26px;justify-content:start;font-size:14.5px}
+.mfacts{margin-top:30px;display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--rule)}
+.mfacts div{padding:14px 14px 0 0}
+.mfacts div+div{padding-left:14px;border-left:1px solid var(--rule)}
+.mfacts b{display:block;font-size:26px;font-weight:800;letter-spacing:-.025em}
+.mfacts span{font-size:14px;color:var(--ink2)}
+.time{border:1px solid var(--rule);border-radius:4px;background:var(--surface)}
+.time .th{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--rule)}
+.est{font-size:12.5px;font-weight:800;padding:3px 7px;border:1.5px solid var(--marcus);color:var(--marcus);border-radius:3px}
+.trow{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--rule)}
+.trow:last-child{border-bottom:0}
+.trow > div{padding:16px 18px}
+.trow > div+div{border-left:1px solid var(--rule)}
+.trow .tl{font-size:12.5px;color:var(--ink3);margin-bottom:4px}
+.trow .tv{font-size:26px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
+.trow .tn{font-size:13.5px;color:var(--ink2);margin-top:4px}
+.warn{margin-top:22px;padding:14px 16px;border-left:3px solid var(--marcus);background:var(--marcus-bg);font-size:15px;border-radius:0 3px 3px 0}
+.warn button{margin-top:10px}
+
+/* open */
+.opens{display:grid;grid-template-columns:1fr 1fr;gap:0 56px}
+.op{display:grid;grid-template-columns:86px 1fr;gap:14px;padding:16px 0;border-bottom:1px solid var(--rule);align-items:baseline}
+.op p{margin:0;font-size:16px}
+.op .tag{justify-self:start}
+.op p b{font-weight:700}
+.next{margin-top:64px}
+.next ol{list-style:none;counter-reset:n;margin:18px 0 0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:0}
+.next li{counter-increment:n;padding:0 20px 0 0;font-size:16px}
+.next li+li{padding-left:20px;border-left:1px solid var(--rule)}
+.next li::before{content:counter(n);display:block;font-size:34px;font-weight:900;letter-spacing:-.03em;margin-bottom:6px;color:var(--ink3)}
+footer{padding:56px 0 72px;border-top:1px solid var(--rule);font-size:14px;color:var(--ink2)}
+footer .wrap{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:40px}
+footer b{color:var(--ink)}
+footer ul{list-style:none;margin:6px 0 0;padding:0}
+footer li{padding:2px 0}
+
+@media (max-width:1180px){
+  .cgrid{grid-template-columns:240px minmax(0,1fr)}
+  .dec{grid-column:1/-1;border-top:1px solid var(--rule)}
+  .acct{border-right:0}
+  .polbody{grid-template-columns:1fr 1fr}
+  .polbody > div:nth-child(3){grid-column:1/-1;border-left:0;border-top:1px solid var(--rule)}
+}
+@media (max-width:900px){
+  .wrap{padding:0 20px}
+  .hero{grid-template-columns:1fr;padding-top:44px}
+  #dotgrid,.dots figcaption{margin-left:0}
+  .grid2,.mon,.opens,.stage,.finder,.never{grid-template-columns:1fr}
+  .flist{border-right:0;border-bottom:1px solid var(--rule)}
+  .fbody{padding:24px 20px}
+  .steps{grid-template-columns:repeat(3,1fr);row-gap:16px}
+  .pipe,.verdicts{grid-template-columns:1fr}
+  .pipe > div+div,.verdicts > div+div{border-left:0;border-top:1px solid var(--rule);padding-left:0}
+  .pipe > div+div{padding-left:28px}
+  .never ul,.next ol{grid-template-columns:1fr 1fr}
+  .next li+li{border-left:0;padding-left:0}
+  .cause{grid-template-columns:1fr;gap:12px}
+  .lesson{grid-template-columns:1fr}
+  .cgrid{grid-template-columns:1fr}
+  .queue{border-right:0;border-bottom:1px solid var(--rule)}
+  .qlist{max-height:300px}
+  .kv{grid-template-columns:repeat(2,1fr)}
+  .calc{grid-template-columns:repeat(2,1fr)}
+  .calc div:nth-child(3){padding-left:0;border-left:0}
+  .polbody{grid-template-columns:1fr}
+  .polbody > div+div{border-left:0;border-top:1px solid var(--rule)}
+  .ctxf{grid-template-columns:1fr 1fr}
+  .stat{grid-template-columns:110px 1fr}
+  footer .wrap{grid-template-columns:1fr}
+  .facts{grid-template-columns:1fr}
+  .facts div+div{border-left:0;padding-left:0;border-top:1px solid var(--rule);padding-top:14px}
+  .mfacts{grid-template-columns:1fr}
+  .mfacts div+div{border-left:0;padding-left:0}
+  .brand span{display:none}
+  .score{flex-wrap:wrap;width:100%}
+  .score .sl br{display:none}
+  .strip{width:100%;flex-wrap:wrap}
+  .facts div{padding-bottom:14px}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav" aria-label="Sections">
+  <div class="wrap">
+    <a class="brand" href="#top">Larkspur account check<span>Group 2</span></a>
+    <ul>
+      <li><a class="l" href="#problem">Problem</a></li>
+      <li><a class="l" href="#discovery">Discovery</a></li>
+      <li><a class="l" href="#process">Process</a></li>
+      <li><a class="l" href="#rules">How it decides</a></li>
+      <li><a class="l run" href="#console">Run the agent</a></li>
+      <li><a class="l" href="#results">Results</a></li>
+      <li><a class="l" href="#monday">Monday</a></li>
+      <li><a class="l" href="#open">Open questions</a></li>
+    </ul>
+  </div>
+</nav>
+
+<header class="hero wrap" id="top">
+  <div>
+    <h1>Every Monday, 900 accounts.<span class="two">Thirty-four need a person.</span></h1>
+    <p class="lede">An agent that decides which usage drops at Larkspur Software are <strong>real churn risks worth a call this week</strong>, and hands back the ones only a person can judge.</p>
+    <div class="cta">
+      <a class="btn primary" href="#console">Run the agent</a>
+      <a class="btn" href="#problem">Read the story</a>
+    </div>
+    <div class="facts">
+      <div><b>30 of 30</b><span>matched the user's own answers on the course test. First run: 24.</span></div>
+      <div><b>13 rules</b><span>applied in order. The first that fits decides and names itself.</span></div>
+      <div><b>$603,910</b><span>a year, lost last quarter across 14 accounts.</span></div>
+    </div>
+  </div>
+  <figure class="dots" aria-label="900 accounts, 34 flagged for a person">
+    <div id="dotgrid" aria-hidden="true"></div>
+    <figcaption>
+      <span class="legend-row"><span class="sw b-call"></span><b>29</b> call this week</span>
+      <span class="legend-row"><span class="sw b-marcus"></span><b>3</b> ask Marcus</span>
+      <span class="legend-row"><span class="sw b-owner"></span><b>2</b> ask the owner</span>
+      <span class="legend-row"><span class="sw b-ignore"></span><b>866</b> ignore</span>
+      <span class="src">The real Oct 12 usage export, re-run through agent_v3.py from clean files.</span>
+    </figcaption>
+  </figure>
+</header>
+
+<!-- PROBLEM -->
+<section class="sec alt" id="problem">
+  <div class="wrap">
+    <h2>The signal was there. The call came late.</h2>
+    <p class="dek">Marcus Bell runs Customer Success for 900 fleet customers. Once a quarter he sorts usage by the biggest drop and hands out the top 30 for calls.</p>
+    <div class="grid2">
+      <div>
+        <div class="tiles" aria-label="14 lost accounts">
+          <span class="tile vis late"></span><span class="tile vis late"></span><span class="tile vis late"></span><span class="tile vis late"></span><span class="tile vis late"></span><span class="tile vis late"></span><span class="tile vis late"></span>
+          <span class="tile vis"></span><span class="tile vis"></span><span class="tile vis"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span>
+        </div>
+        <div class="tlegend">
+          <span><span class="k f"></span><strong>10 of 14</strong> lost accounts were down more than 30% at least six weeks before notice</span>
+          <span><span class="k r"></span><strong>7 of those 10</strong> got their first call only after they had given notice</span>
+          <span><span class="k"></span><strong>4</strong> gave no usage signal: acquired, price, closed, a two-week collapse</span>
+        </div>
+        <p class="foot">Marcus's notes say nine were called after notice; his own table dates seven. We use seven.</p>
+      </div>
+      <div class="stat-list">
+        <div class="stat"><span class="n">$603,910</span><p>Annual value lost last quarter, <strong>14 customers</strong>.</p></div>
+        <div class="stat"><span class="n">22 days</span><p>From the list to the call at Copper Valley. <strong>It had already signed with a competitor.</strong></p></div>
+        <div class="stat"><span class="n">28 of 30</span><p>Accounts on the July call list that were <strong>school districts on summer break</strong>.</p></div>
+      </div>
+    </div>
+    <p class="thesis">Spotting drops was never the hard part. <b>Deciding which drops are real is.</b> Seasons, mergers, outages, re-keyed IDs and broken feeds all look like churn.</p>
+  </div>
+</section>
+
+<!-- DISCOVERY -->
+<section class="sec" id="discovery">
+  <div class="wrap">
+    <h2>We asked about past events, not opinions.</h2>
+    <p class="dek">A 25-minute interview with Marcus, then four files he released once we asked the right questions. Pick a finding.</p>
+    <dl class="need">
+      <dt>Need, before</dt><dd class="old">Marcus needs to know every week which accounts dropped, ranked by severity.</dd>
+      <dt>Need, after</dt><dd class="new">Marcus needs to decide every Monday which of his 900 accounts with falling usage are real churn risks worth a call this week, before the 90-day notice deadline passes.</dd>
+    </dl>
+    <div class="finder">
+      <ul class="flist" role="tablist" aria-label="Findings" id="flist"></ul>
+      <div class="fbody" id="fbody" role="tabpanel"></div>
+    </div>
+    <div class="assume">
+      <div><b>10 of 10</b><span class="muted">starting assumptions corrected</span></div>
+      <div><b>26</b><span class="muted">assumptions in v2, 11 of them new</span></div>
+      <div><b>5 of 5</b><span class="muted">hidden facts found, on the second pass</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- PROCESS -->
+<section class="sec alt" id="process">
+  <div class="wrap">
+    <h2>Four weeks, three spec versions, one rerun.</h2>
+    <p class="dek">Every change to the agent traces to a source: the interview, a file, the test, or Marcus's own words.</p>
+    <div class="steps" role="tablist" aria-label="Project stages" id="steps"></div>
+    <div class="stage" id="stage" role="tabpanel"></div>
+    <table class="lineage">
+      <thead><tr><th>Artifact</th><th>First</th><th>Then</th><th>Final</th></tr></thead>
+      <tbody>
+        <tr><td>Need</td><td>Know which dropped, ranked</td><td></td><td class="fin">Decide which are real, call this week</td></tr>
+        <tr><td>Assumptions</td><td>10 in v1</td><td>All 10 corrected</td><td class="fin">26 in v2</td></tr>
+        <tr><td>Spec</td><td>PRD v1, Oct 14</td><td>PRD v2, 18 changes</td><td class="fin">PRD v3, 10 changes</td></tr>
+        <tr><td>Test</td><td>24 of 30</td><td>30 of 30 scored</td><td class="fin">30 of 30 on a fresh run</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- HOW IT DECIDES -->
+<section class="sec" id="rules">
+  <div class="wrap">
+    <h2>It compares each account with itself, then applies Marcus's rules in order.</h2>
+    <p class="dek">Nothing is scored or weighted. Every verdict can be traced to one rule and one line of evidence.</p>
+    <div class="pipe">
+      <div>
+        <div class="pn">Step 1</div>
+        <h3>Clean the weeks</h3>
+        <p><strong style="color:var(--ink)">Blank is missing, never zero.</strong> Outage weeks are thrown out for every account. They are found from clusters of P1 tickets on 10 or more accounts, not from a hard-coded date.</p>
+      </div>
+      <div>
+        <div class="pn">Step 2</div>
+        <h3>Compare with its own level</h3>
+        <div class="formula"><span>Δ =</span><span class="frac"><span>last 3 weeks − first 3 weeks</span><span>first 3 weeks</span></span></div>
+        <p>Averages of active vehicles. Flag a fall of <strong style="color:var(--ink)">more than 30%</strong>. Vehicles are what Larkspur prices on. Logins are shown beside them.</p>
+      </div>
+      <div>
+        <div class="pn">Step 3</div>
+        <h3>Apply 13 rules in order</h3>
+        <p>The first rule that fits decides. Anything not settled with Marcus is an <strong style="color:var(--ink)">OPEN rule</strong>: the agent hands it back and names it instead of guessing.</p>
+      </div>
+    </div>
+    <div class="verdicts">
+      <div><div class="vn c-call"><span class="sw b-call"></span>call this week</div><p>A real drop, before or near the notice deadline.</p><div class="to">Goes to the account manager. Marcus too, if over $75,000 or an export request.</div></div>
+      <div><div class="vn c-ignore"><span class="sw b-ignore"></span>ignore</div><p>Seasonal, merged, re-keyed, outage, or flat.</p><div class="to">Goes to nobody. The reason still says why.</div></div>
+      <div><div class="vn c-marcus"><span class="sw b-marcus"></span>ask Marcus</div><p>A rule he hasn't settled yet, or data that makes no sense.</p><div class="to">Goes to Marcus, with the OPEN rule named.</div></div>
+      <div><div class="vn c-owner"><span class="sw b-owner"></span>ask the owner</div><p>The account manager holds the missing fact.</p><div class="to">Goes to the account manager, with the evidence.</div></div>
+    </div>
+    <div class="never">
+      <h3>The agent never</h3>
+      <ul>
+        <li>contacts a customer</li><li>reads an email; it uses the date only</li><li>treats a blank week as zero</li>
+        <li>decides a hand-back case</li><li>calls an account "safe" when usage can't see the risk</li><li>applies the playbook's 20% login rule</li>
+        <li>writes to Salesforce or clears a flag</li><li>invents a rule</li><li>blames an account manager</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- CONSOLE -->
+<section class="sec" id="console">
+  <div class="wrap wide">
+    <h2>Run the agent yourself.</h2>
+    <p class="dek">Pick an account to see every rule it passed and the one that decided it. Change a threshold or switch off a fix, and all accounts re-run against Marcus's answers.</p>
+    <div class="con">
+      <div class="conbar">
+        <div class="score" id="score"></div>
+        <button class="btn sm primary" id="runMonday">Run the Monday list</button>
+        <button class="btn sm" id="loadBtn">Load your CSVs</button>
+        <button class="btn sm" id="exportBtn">Download audit log</button>
+        <input type="file" id="fileIn" accept=".csv,text/csv" multiple class="hidden">
+      </div>
+      <div class="srcline" id="srcline"></div>
+      <details class="pol" id="pol">
+        <summary><span class="car">&#9656;</span>Policy<span class="pdiff" id="pdiff"></span></summary>
+        <div class="polbody">
+          <div>
+            <h4>Thresholds</h4>
+            <div id="knobs"></div>
+          </div>
+          <div>
+            <h4>Rule set</h4>
+            <div class="presets">
+              <button class="seg" data-preset="v3" aria-pressed="true">Final (PRD v3)</button>
+              <button class="seg" data-preset="v1" aria-pressed="false">First run (PRD v2)</button>
+            </div>
+            <div id="fixes"></div>
+          </div>
+          <div>
+            <h4>Guardrails</h4>
+            <div id="guards"></div>
+            <h4 style="margin-top:14px">Data feeds</h4>
+            <div id="feeds"></div>
+            <div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap">
+              <button class="btn sm" id="resetPol">Reset to PRD v3</button>
+              <button class="btn sm" id="copyPol">Copy policy as JSON</button>
+            </div>
+          </div>
+        </div>
+        <div class="flips hidden" id="flips"></div>
+      </details>
+      <div class="cgrid">
+        <aside class="queue" aria-label="Accounts">
+          <div class="qtabs" role="tablist" id="qtabs"></div>
+          <div class="qtools">
+            <input type="search" id="qsearch" placeholder="Search name or ID" aria-label="Search accounts">
+            <div class="vf" id="vfilter"></div>
+          </div>
+          <ul class="qlist" id="qlist"></ul>
+        </aside>
+        <div class="acct" id="acct">
+          <div class="vtabs">
+            <button class="seg" id="vAcct" aria-pressed="true">Account</button>
+            <button class="seg" id="vList" aria-pressed="false">Monday list</button>
+          </div>
+          <div id="acctBody"></div>
+          <div id="listBody" class="hidden"></div>
+        </div>
+        <div class="dec" id="dec" aria-live="polite"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- RESULTS -->
+<section class="sec alt" id="results">
+  <div class="wrap">
+    <h2>24 of 30 on the first run. 30 of 30 after fixing causes, not rows.</h2>
+    <p class="dek">The instructors scored each row against Marcus's answer of record. No fix names a specific account.</p>
+    <div class="scale" id="scale"></div>
+    <div class="causes" id="causes"></div>
+    <div class="lesson">
+      <h3>A rule we left out on purpose</h3>
+      <p>In chat, Marcus said City of Hollisford (flat, 20% used, $78,980) should go to Dan. His <strong>answer of record was no call</strong>: flat use is a quarterly-review conversation. A rule built from the chat answer would have turned a hit into a miss. <mark>The answer of record wins.</mark></p>
+    </div>
+  </div>
+</section>
+
+<!-- MONDAY -->
+<section class="sec" id="monday">
+  <div class="wrap">
+    <h2>On the real October 12 export.</h2>
+    <p class="dek">The same script, unchanged, on all 900 accounts.</p>
+    <div class="mon">
+      <div class="funnel">
+        <div class="fnum"><b>900</b><span>to</span><b>34</b></div>
+        <div class="fbar" aria-hidden="true">
+          <i class="b-call" style="flex:29"></i><i class="b-marcus" style="flex:3"></i><i class="b-owner" style="flex:2"></i><i style="flex:120;background:var(--rule)"></i>
+        </div>
+        <div class="fleg">
+          <span class="legend-row"><span class="sw b-call"></span><b>29</b>calls</span>
+          <span class="legend-row"><span class="sw b-marcus"></span><b>3</b>ask Marcus</span>
+          <span class="legend-row"><span class="sw b-owner"></span><b>2</b>ask the owner</span>
+          <span class="legend-row"><span class="sw" style="background:var(--rule2)"></span><b>866</b>ignore</span>
+        </div>
+        <p class="tiny faint" style="margin-top:8px">Not to scale: the 866 ignored accounts are compressed.</p>
+        <div class="mfacts">
+          <div><b>5 to 8</b><span>calls per account manager</span></div>
+          <div><b>≈ $1.1M</b><span>annual value behind the 29 calls</span></div>
+          <div><b>6</b><span>already past the notice deadline, still called for the next renewal</span></div>
+        </div>
+        <div class="warn">
+          <strong>One fix can't fire live yet.</strong> No Monday file carries the date a fleet manager last wrote, so Wexbridge and Oriel Valley come out as calls on the live export.
+          <div><button class="btn sm" id="liveFeed">Show it in the console</button></div>
+        </div>
+      </div>
+      <div class="time">
+        <div class="th"><h3 style="margin:0">Time per Monday</h3><span class="est">ESTIMATE</span></div>
+        <div class="trow"><div><div class="tl">By hand</div><div class="tv">≈ 15 h</div><div class="tn">900 rows × about 1 min, across five managers</div></div><div><div class="tl">With the agent</div><div class="tv">≈ 1 h</div><div class="tn">34 rows × about 2 min, checks already done</div></div></div>
+        <div class="trow"><div><div class="tl">Lag, by hand (fact)</div><div class="tv" style="font-size:20px">2 to 3 weeks</div><div class="tn">after a quarterly list</div></div><div><div class="tl">Lag, with the agent (fact)</div><div class="tv" style="font-size:20px">This week</div><div class="tn">weekly list, every call due now</div></div></div>
+        <div class="trow"><div style="grid-column:1/-1" class="small muted">Minutes per row are assumptions; nobody timed it. To replace them, time one person checking 10 accounts by hand.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- OPEN -->
+<section class="sec alt" id="open">
+  <div class="wrap">
+    <h2>What we have not solved.</h2>
+    <p class="dek">"We haven't tested that yet" is an acceptable answer. Here is where it applies.</p>
+    <div class="opens">
+      <div class="op"><span class="tag open">OPEN 6</span><p><b>No live email-date feed.</b> The 10-day check works in the test only.</p></div>
+      <div class="op"><span class="tag open">OPEN 7, 8</span><p><b>Two placeholder lines</b>: 75% merger coverage, 50% school fleet back. Not yet confirmed by Marcus.</p></div>
+      <div class="op"><span class="tag open">OPEN 1a</span><p><b>12 weeks is too short</b> for slow decliners like Grey Fox and Northgate. Save every export.</p></div>
+      <div class="op"><span class="tag">Limit</span><p><b>Usage can't see 4 of 14 losses.</b> The agent never calls those accounts safe.</p></div>
+      <div class="op"><span class="tag prop">Proposed</span><p><b>Rule 12 rests on one case</b>, and the hand-back wording is ours, not Marcus's.</p></div>
+      <div class="op"><span class="tag">Gap</span><p><b>Calendar gaps</b>: school fleets January to mid-June, plows in December, use the general rules.</p></div>
+      <div class="op"><span class="tag">Wording</span><p><b>Reason lines can improve</b>: outage rows don't say "outage"; "since week of" shows the window start.</p></div>
+      <div class="op"><span class="tag open">OPEN 3b, 3c</span><p><b>Routing is unsettled</b>: who gets big cases, and how the list reaches managers.</p></div>
+    </div>
+    <div class="next">
+      <h3>Next</h3>
+      <ol>
+        <li>Save every Monday export so history grows past 12 weeks.</li>
+        <li>Get a feed of fleet-manager email dates.</li>
+        <li>Confirm the two placeholder lines and rule 12 with Marcus.</li>
+        <li>Build the second job: log calls, clear flags, recalibrate against outcomes.</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div><b>Group 2, Table 2.</b> AI Agent Management, University of Chicago, Fall 2026. Demo day, November 4, 2026.<br><span class="faint">Larkspur Software and Marcus Bell are a course case: the user is role-played from a hidden profile.</span></div>
+    <div><b>Triad</b><ul><li>Builder: ran the build chat</li><li>Designer: task map, recording</li><li>Evaluator: assumptions, hard rows</li></ul></div>
+    <div><b>Packet</b><ul><li>prd_v3.md</li><li>agent_instructions_v3.md</li><li>agent_v3.py</li><li>test_scorecard_v1_vs_final.csv</li></ul></div>
+  </div>
+</footer>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+/* Larkspur Monday account check: a line-for-line port of agent_v3.py decide(), plus a trace of every rule
+   and a policy object so a person can change thresholds, switch v3 fixes off, or remove a guardrail. */
+const Engine = (function () {
+  const DAY = 86400000;
+  const dn = s => { if (!s) return null; const [y, m, d] = s.split('-').map(Number); return Date.UTC(y, m - 1, d) / DAY; };
+  const iso = n => new Date(n * DAY).toISOString().slice(0, 10);
+  const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const MONTH = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  const parts = n => { const d = new Date(n * DAY); return { y: d.getUTCFullYear(), m: d.getUTCMonth() + 1, d: d.getUTCDate() }; };
+  const mon = n => { const p = parts(n); return MON[p.m - 1] + ' ' + p.d; };
+  const fix0 = x => { const f = Math.floor(x); return Math.abs(x - f - 0.5) < 1e-9 ? (f % 2 === 0 ? f : f + 1) : Math.round(x); };
+  const pct = c => fix0(Math.abs(c) * 100) + '%';
+  const isN = x => typeof x === 'number' && !Number.isNaN(x);
+  const mean = a => a.reduce((s, x) => s + x, 0) / a.length;
+  const line = x => x.map(v => isN(v) ? String(Math.trunc(v)) : '-').join(' ');
+  const FULL = 'Request full export of all work orders and vehicle records';
+  const ADMIN = 'Change account admin contact';
+
+  const DEFAULT = {
+    drop: 30, merge: 75, school: 50, emailDays: 10, renewDays: 120, underUse: 50,
+    fix: { email: true, rekey: true, school: true, merger: true },
+    guard: { incident: true, blank: true },
+    feed: { email: true }
+  };
+  const clone = o => JSON.parse(JSON.stringify(o));
+
+  const RULES = [
+    { n: 1, name: 'Already gave notice', out: ['ignore'], src: ['Files'], why: 'Marcus already has these. 12 of the 58 accounts down more than 30% had given notice.' },
+    { n: 2, name: 'Not in Salesforce', out: ['ask Marcus'], src: ['Spec v2'], why: 'With no owner, fleet type or renewal, no rule can be applied safely.' },
+    { n: 3, name: 'Asked for a full export', out: ['call this week'], src: ['Files', 'Playbook 6.2'], why: 'Three of last quarter\u2019s losses filed this ticket about two weeks before notice. Support never told the account manager.' },
+    { n: 4, name: 'Snowplow season', out: ['ignore', 'ask Marcus'], src: ['Interview', 'OPEN 5c'], why: 'Plows come off after winter every year. Renata calls the plow contractors in November.' },
+    { n: 5, name: 'School season', out: ['ignore', 'call this week'], src: ['Interview', 'Test fix', 'OPEN 8'], why: '28 of the 30 accounts on the July call list were school districts on summer break.' },
+    { n: 6, name: 'Parent account (merger)', out: ['ignore', 'ask the owner'], src: ['Interview', 'From Marcus', 'OPEN 7'], why: 'Birchwood looked like it fell 50% while Kestrel doubled. Judge the move, not one sibling.' },
+    { n: 7, name: 'Re-keyed ID', out: ['stitch'], src: ['From Marcus'], why: 'An old ID reads 0 the week its replacement starts. Nothing dropped; the series is stitched.' },
+    { n: 8, name: 'Zero or missing data', out: ['ask Marcus', 'ask the owner'], src: ['Files'], why: 'Blank means the feed did not come through. It is never read as zero.' },
+    { n: 9, name: 'Drop against its own level', out: ['call this week', 'ask the owner'], src: ['Marcus\u2019s rule', 'Test fix', 'OPEN 6'], why: '10 of the 14 lost accounts were down more than 30% at least six weeks before notice.' },
+    { n: 10, name: 'Logins-only drop', out: ['ask Marcus'], src: ['OPEN 1b'], why: 'Logins move first. Whether a logins-only drop is a call is not settled.' },
+    { n: 11, name: 'Under-used, renewing soon', out: ['ask Marcus'], src: ['OPEN 1c'], why: 'Under 50% alone flagged 59 flat accounts. Requiring renewal inside 120 days cut that to 2.' },
+    { n: 12, name: 'Admin contact changed', out: ['ask the owner'], src: ['Proposed'], why: 'Our proposal from one case (Halverson). Needs Marcus\u2019s OK.' },
+    { n: 13, name: 'Nothing fits', out: ['ignore'], src: ['Default'], why: 'No drop against its own level.' }
+  ];
+
+  function f3l3(x) {
+    const ok = []; x.forEach((v, i) => { if (isN(v)) ok.push(i); });
+    if (ok.length < 3) return null;
+    const fi = ok.slice(0, 3), li = ok.slice(-3);
+    return { first: mean(fi.map(i => x[i])), last: mean(li.map(i => x[i])), i0: ok[0], fi, li };
+  }
+  function chg(x, WK) {
+    const r = f3l3(x); if (!r || r.first <= 0) return null;
+    return { c: (r.last - r.first) / r.first, wk: WK[r.i0], r };
+  }
+  function series(arr, bad, blankZero) {
+    return arr.map((v, i) => bad.includes(i) ? NaN : (v === null || v === undefined || v === '' ? (blankZero ? 0 : NaN) : Number(v)));
+  }
+  function zeroFrom(xv, xl) {
+    for (let w = 1; w < 12; w++) {
+      const z = a => a.slice(w).every(v => isN(v) && v === 0);
+      if (z(xv) && z(xl)) return w;
+    }
+    return null;
+  }
+  const startsAt = xv => { const i = xv.findIndex(isN); return i < 0 ? null : i; };
+
+  function run(it, P, env) {
+    P = P || DEFAULT;
+    const RUN = dn(it.decision), w1 = dn(it.w1);
+    const WK = Array.from({ length: 12 }, (_, i) => w1 + 7 * i);
+    const DROP = P.drop / 100;
+    const trace = RULES.map(r => ({ n: r.n, status: 'skip', text: '' }));
+    const T = (n, status, text) => { trace[n - 1] = { n, status, text }; };
+    const incWeeks = new Set((env.incidents || []).filter(x => x.accounts >= 10).map(x => dn(x.week)));
+    const bad = P.guard.incident ? WK.map((w, i) => incWeeks.has(w) ? i : -1).filter(i => i >= 0) : [];
+    const blankZero = !P.guard.blank;
+    let xv = series(it.v, bad, blankZero), xl = series(it.l, bad, blankZero);
+    const excluded = WK.map((w, i) => bad.includes(i) ? 'outage' : ((it.v[i] === null || it.v[i] === undefined) ? (blankZero ? 'zeroed' : 'blank') : null));
+    const tickets = (it.tickets || []).filter(t => dn(t.opened) <= RUN);
+    const calc = { WK: WK.map(iso), excluded, RUN: it.decision };
+    let decided = null;
+    const done = (n, verdict, reason, extra) => { decided = { n, verdict, reason, ...(extra || {}) }; return decided; };
+    const finish = () => {
+      let hit = false;
+      trace.forEach(t => { if (t.n === decided.n) { t.status = 'fire'; hit = true; } else if (hit && t.status !== 'apply') t.status = 'skip'; });
+      const sameWindow = env.dayOne && it.w1 === env.dayOneW1;
+      return { ...decided, rule: decided.n, ruleName: RULES[decided.n - 1].name, trace, calc, P, sameWindow };
+    };
+
+    // rule 2 runs first in the script (no Salesforce row means no other rule can be read)
+    if (!it.insf) {
+      T(1, 'pass', 'needs a Salesforce status, none found');
+      T(2, 'fire', 'no match by account ID or by name');
+      calc.v = f3l3(xv); calc.l = f3l3(xl); calc.xv = xv; calc.xl = xl;
+      done(2, 'ask Marcus', 'not in Salesforce by ID or name; show export row');
+      return finish();
+    }
+    const own = it.owner, ren = dn(it.renewal), cv = Number(it.cv);
+    const dl = ren === null ? NaN : ren - 90;
+    calc.deadline = Number.isFinite(dl) ? iso(dl) : null; calc.daysToDeadline = Number.isFinite(dl) ? dl - RUN : null;
+    const util = x => { const r = f3l3(x); return r ? r.last / cv : null; };
+    let u = util(xv);
+    calc.u = u;
+
+    // 1
+    if (it.status === 'Notice given' && it.notice && dn(it.notice) <= RUN) {
+      T(1, 'fire', `status Notice given on ${mon(dn(it.notice))}, on or before the decision date`);
+      done(1, 'ignore', `gave notice ${it.notice}`); return wrap();
+    }
+    T(1, 'pass', `status ${it.status || 'Active'}`);
+    T(2, 'pass', 'matched in Salesforce by account ID');
+    // 3
+    const fx = tickets.filter(t => t.subject === FULL);
+    if (fx.length) {
+      const d = Math.max(...fx.map(t => dn(t.opened)));
+      T(3, 'fire', `ticket opened ${mon(d)}: \u201c${FULL}\u201d`);
+      done(3, 'call this week', `asked for full export ${mon(d)}; goes to Marcus and ${own} (OPEN 3b)`, { top: true }); return wrap();
+    }
+    T(3, 'pass', tickets.length ? `${tickets.length} ticket(s), none ask for a full export` : 'no full-export ticket');
+    const ft = it.fleet, m = parts(RUN).m, day = parts(RUN).d;
+    const UU = P.underUse / 100;
+    // 4
+    if (ft === 'snowplow') {
+      if (m >= 3 && m <= 11) { T(4, 'fire', `snowplow fleet, decision in ${MONTH[m - 1]} (March to November)`); done(4, 'ignore', 'plow fleet, in season'); return wrap(); }
+      if (m === 12 && u !== null && u < UU) { T(4, 'fire', `snowplow in December at ${fix0(u * 100)}% of contracted, under ${P.underUse}%`); done(4, 'ask Marcus', `plow fleet after Nov 1, still under ${P.underUse}% (OPEN 5c)`); return wrap(); }
+      T(4, 'pass', `snowplow, ${MONTH[m - 1]}, not under the line`);
+    } else T(4, 'pass', `fleet type ${ft || 'unknown'}, not snowplow`);
+    // 5
+    if (ft === 'school bus') {
+      const SB = P.school / 100;
+      if (P.fix.school) {
+        const sep7 = Date.UTC(parts(RUN).y, 8, 7) / DAY;
+        if ((m === 6 && day >= 15) || m === 7 || m === 8 || (m === 9 && RUN < sep7)) { T(5, 'fire', `school fleet, decision ${mon(RUN)} falls in summer (mid-June to Sep 6)`); done(5, 'ignore', 'school fleet, summer'); return wrap(); }
+        if (RUN >= sep7) {
+          if (u !== null && u < SB) {
+            const n = f3l3(xv).last;
+            T(5, 'fire', `after Sep 7, still at ${fix0(n)} of ${cv} (${fix0(u * 100)}%), under the ${P.school}% line`);
+            done(5, 'call this week', `school fleet, still at ${fix0(n)} of ${cv} in ${MONTH[m - 1]}`); return wrap();
+          }
+          T(5, 'fire', `after Sep 7, back at ${u === null ? '?' : fix0(u * 100)}% of contracted (line ${P.school}%)`);
+          done(5, 'ignore', 'school fleet, back'); return wrap();
+        }
+        T(5, 'pass', 'school fleet, January to mid-June: general rules apply');
+      } else {
+        if ((m === 6 && day >= 15) || m === 7 || m === 8) { T(5, 'fire', `school fleet, summer (v1 window: mid-June to Aug 31)`); done(5, 'ignore', 'school fleet, summer'); return wrap(); }
+        if (m >= 9) {
+          if (u !== null && u < SB) { T(5, 'fire', `after Aug 31 at ${fix0(u * 100)}%: v1 left this OPEN and asked`); done(5, 'ask Marcus', `school fleet after Aug 31, still under ${P.school}% of contracted vehicles (${fix0(u * 100)}%) (OPEN 5a)`); return wrap(); }
+          T(5, 'fire', 'after Aug 31, back'); done(5, 'ignore', 'school fleet, back'); return wrap();
+        }
+        T(5, 'pass', 'school fleet, outside the seasonal windows');
+      }
+    } else T(5, 'pass', 'not a school fleet');
+    // 6
+    const sameWindow = env.dayOne && it.w1 === env.dayOneW1;
+    if (it.parent && sameWindow) {
+      const Pn = it.parent;
+      const names = new Set(Object.entries(env.sfParent || {}).filter(([, p]) => p === Pn).map(([n]) => n));
+      names.add(it.name);
+      const rows = Object.entries(env.dayOne).filter(([, r]) => names.has(r.name)).map(([id, r]) => ({ id, ...r }));
+      const cOwn = chg(xv, WK);
+      if (P.fix.merger && cOwn && cOwn.c < -DROP) {
+        const a = cOwn.r.first, b = cOwn.r.last, fall = a - b;
+        let rise = 0; const sib = [];
+        rows.filter(r => r.name !== it.name).forEach(o => {
+          const rr = f3l3(series(o.v, bad, blankZero));
+          if (rr) { rise += Math.max(0, rr.last - rr.first); sib.push({ id: o.id, name: o.name, first: rr.first, last: rr.last }); }
+        });
+        calc.merger = { parent: Pn, fall, rise, cover: fall > 0 ? rise / fall : 0, sib, own: { first: a, last: b } };
+        const covTxt = `fell ${fix0(fall)}, siblings rose ${fix0(rise)}: ${fix0(rise / fall * 100)}% of the fall, line ${P.merge}%`;
+        if (rise >= (P.merge / 100) * fall) { T(6, 'fire', covTxt); done(6, 'ignore', `merged into ${Pn}`); return wrap(); }
+        T(6, 'fire', covTxt + ', not covered');
+        done(6, 'ask the owner', `${own}: fell ${fix0(fall)}, only ${fix0(rise)} arrived on ${Pn}`); return wrap();
+      }
+      const tot = WK.map((_, i) => {
+        if (bad.includes(i)) return NaN;
+        const vals = rows.map(r => series(r.v, bad, blankZero)[i]);
+        return vals.every(isN) ? vals.reduce((s, x) => s + x, 0) : NaN;
+      });
+      const gc = chg(tot, WK);
+      calc.group = { parent: Pn, members: rows.map(r => ({ id: r.id, name: r.name })), tot, c: gc ? gc.c : null };
+      if (gc && !(gc.c < -DROP)) {
+        T(6, 'fire', `group of ${rows.length} under ${Pn} ${gc.c < 0 ? 'down' : 'up'} ${pct(gc.c)} in total, not past ${P.drop}%` + (P.fix.merger ? '' : ' (v1 group test)'));
+        done(6, 'ignore', `merged into ${Pn}`); return wrap();
+      }
+      T(6, 'pass', `group under ${Pn} ${gc ? 'down ' + pct(gc.c) : 'has gaps'}: go on`);
+    } else T(6, 'pass', it.parent ? 'has a parent, but its weeks do not match the day-one export' : 'no parent account');
+    // 7
+    let prefix = '';
+    if (P.fix.rekey && sameWindow) {
+      const twins = Object.entries(env.dayOne).filter(([id, r]) => r.name === it.name && id !== it.id);
+      for (const [oid, o] of twins) {
+        const ov = series(o.v, bad, false), ol = series(o.l, bad, false);
+        let w = zeroFrom(xv, xl);
+        if (w !== null && startsAt(ov) === w && ov.slice(0, w).every(v => !isN(v))) {
+          calc.twin = { id: oid, from: iso(WK[w]), role: 'old', ov: ov.slice(), orig: xv.slice() };
+          xv = xv.map((v, i) => isN(ov[i]) ? ov[i] : v); xl = xl.map((v, i) => isN(ol[i]) ? ol[i] : v);
+          prefix = `re-keyed to ${oid}`;
+          T(7, 'apply', `${it.id} reads 0 from week of ${mon(WK[w])}, the week ${oid} starts: series stitched`); break;
+        }
+        w = zeroFrom(ov, ol);
+        if (w !== null && startsAt(xv) === w && xv.slice(0, w).every(v => !isN(v))) {
+          calc.twin = { id: oid, from: iso(WK[w]), role: 'new', ov: ov.slice(), orig: xv.slice() };
+          xv = xv.map((v, i) => isN(v) ? v : ov[i]); xl = xl.map((v, i) => isN(v) ? v : ol[i]);
+          prefix = `re-keyed from ${oid}`;
+          T(7, 'apply', `${oid} reads 0 from week of ${mon(WK[w])}, the week this ID starts: series stitched`); break;
+        }
+      }
+      if (prefix) u = util(xv);
+      else T(7, 'pass', twins.length ? 'a same-name ID exists, but the weeks do not line up' : 'no other ID with this name');
+    } else T(7, 'pass', P.fix.rekey ? 'no day-one export for these weeks' : 'switched off (v1 had no stitch)');
+    calc.u = u; calc.xv = xv; calc.xl = xl; calc.prefix = prefix;
+    const out = (n, v, why, extra) => done(n, v, prefix ? `${prefix}; ${why}` : why, extra);
+    // 8
+    const ok = xv.map((v, i) => isN(v) ? i : -1).filter(i => i >= 0);
+    const last3blank = xv.slice(-3).every(v => !isN(v));
+    const z3 = xl.slice(-3).every(v => isN(v) && v === 0) && xv.slice(-3).every(v => !isN(v) || v === 0);
+    if (z3) {
+      T(8, 'fire', 'logins 0 and vehicles 0 or blank for the last three weeks');
+      if (P.fix.rekey) { out(8, 'ask Marcus', '0 logins, no vehicles, no re-keyed twin'); return wrap(); }
+      out(8, 'ask Marcus', '0 logins and no vehicles in last 3 weeks: missing feed or real zero? (OPEN 4)'); return wrap();
+    }
+    if (last3blank || ok.length < 3) {
+      const miss = WK.filter((_, i) => !isN(xv[i])).map(iso);
+      T(8, 'fire', last3blank ? 'last three vehicle weeks are blank' : `only ${ok.length} usable weeks`);
+      out(8, 'ask the owner', `${own}: vehicle weeks missing: ${miss.join(', ')} (blank is not zero)`); return wrap();
+    }
+    const nb = excluded.filter(e => e).length;
+    T(8, 'pass', `${ok.length} usable weeks` + (nb ? `, ${nb} thrown out` : ''));
+    const c = chg(xv, WK), cl = chg(xl, WK);
+    calc.v = c ? c.r : f3l3(xv); calc.l = cl ? cl.r : f3l3(xl); calc.cv = c ? c.c : null; calc.cl = cl ? cl.c : null;
+    // 9
+    if (c && c.c < -DROP) {
+      const le = P.fix.email && P.feed.email && it.email ? dn(it.email) : null;
+      if (le !== null && RUN - le >= 0 && RUN - le <= P.emailDays) {
+        T(9, 'fire', `vehicles down ${pct(c.c)} (line ${P.drop}%), and the fleet manager wrote ${RUN - le} days ago (window ${P.emailDays})`);
+        out(9, 'ask the owner', `${own}: down ${pct(c.c)}, fleet manager wrote ${mon(le)}, ask before calling`); return wrap();
+      }
+      let why = `down ${pct(c.c)} since week of ${iso(c.wk)}` + (cl ? `, logins ${cl.c < 0 ? 'down' : 'up'} ${pct(cl.c)}` : '');
+      if (RUN > dl) why += `; deadline passed, notice takes effect at next renewal ${iso(ren + 365)}`;
+      if (Number(it.value) > 75000) why += '; over $75,000, goes to Marcus the same week (OPEN 3b)';
+      const emailNote = !P.fix.email ? 'email check switched off' : !P.feed.email ? 'no email-date feed (live Monday)' : it.email ? `fleet manager last wrote ${RUN - dn(it.email)} days ago` : 'no recent email on file';
+      T(9, 'fire', `vehicles down ${pct(c.c)} against own level (line ${P.drop}%); ${emailNote}`);
+      out(9, 'call this week', why); return wrap();
+    }
+    T(9, 'pass', c ? `vehicles ${c.c < 0 ? 'down' : 'up'} ${pct(c.c)}, inside the ${P.drop}% line` : 'no comparable baseline');
+    // 10
+    if (cl && cl.c < -DROP) { T(10, 'fire', `logins down ${pct(cl.c)}, vehicles held`); out(10, 'ask Marcus', `only logins down ${pct(cl.c)}, vehicles not (OPEN 1b)`); return wrap(); }
+    T(10, 'pass', cl ? `logins ${cl.c < 0 ? 'down' : 'up'} ${pct(cl.c)}` : 'no login baseline');
+    // 11
+    const inWin = ren !== null && RUN <= ren && ren <= RUN + P.renewDays;
+    if (u !== null && u < UU && inWin && RUN <= dl) {
+      T(11, 'fire', `${fix0(u * 100)}% of contracted, renews in ${ren - RUN} days, deadline ahead`);
+      out(11, 'ask Marcus', `under ${P.underUse}% of contracted vehicles (${fix0(u * 100)}%), renews within ${P.renewDays} days (OPEN 1c)`); return wrap();
+    }
+    T(11, 'pass', `${u === null || !isFinite(u) ? '?' : fix0(u * 100)}% of contracted; ` + (ren === null ? 'no renewal date' : `renews in ${ren - RUN} days`));
+    // 12
+    const ad = tickets.filter(t => t.subject === ADMIN && dn(t.opened) >= RUN - 60);
+    if (ad.length) {
+      const d = Math.max(...ad.map(t => dn(t.opened)));
+      T(12, 'fire', `\u201c${ADMIN}\u201d ticket opened ${mon(d)}`);
+      out(12, 'ask the owner', `${own}: admin contact change ticket ${iso(d)} (proposed)`); return wrap();
+    }
+    T(12, 'pass', 'no admin-contact ticket in the last 60 days');
+    // 13
+    T(13, 'fire', prefix ? 'stitched series is flat' : 'no rule above fits');
+    if (prefix) { done(13, 'ignore', `${prefix}, flat at about ${fix0(f3l3(xv).last)}`); return wrap(); }
+    done(13, 'ignore', 'no drop against its own level'); return wrap();
+
+    function wrap() {
+      if (!calc.xv) { calc.xv = xv; calc.xl = xl; }
+      if (!calc.v) { calc.v = f3l3(xv); calc.l = f3l3(xl); const c2 = chg(xv, WK), l2 = chg(xl, WK); calc.cv = c2 ? c2.c : null; calc.cl = l2 ? l2.c : null; }
+      return finish();
+    }
+  }
+
+  // Marcus's words map onto ours
+  const toMarcus = v => v === 'call this week' ? 'Call' : v === 'ignore' ? 'No call' : 'Ask the account manager';
+
+  return { run, RULES, DEFAULT, clone, toMarcus, dn, iso, mon, fix0, pct, line, MONTH };
+})();
+if (typeof module !== 'undefined') module.exports = Engine;
+
+const DATA = {"items":[{"id":"LKS-1071","name":"Blue Mesa Snow Services","owner":"Mike Tran","decision":"2026-03-16","w1":"2025-12-22","cv":32,"fleet":"snowplow","value":18400,"renewal":"2026-11-15","parent":null,"email":null,"v":[30,31,31,30,31,30,29,28,22,15,11,3],"l":[62,64,63,61,62,60,58,55,44,31,22,6],"status":"Active","notice":null,"insf":true,"set":"test","tests":"Snowplow fleet, end of winter","tickets":[],"marcus":{"answer":"No call","why":"Plows coming off after winter, same every year; call in November if not back"},"v1":{"verdict":"ignore","reason":"plow fleet, in season","result":"Hit","cause":null},"rec":{"verdict":"ignore","reason":"plow fleet, in season","rule":"4 snowplow season"}},{"id":"LKS-1057","name":"Lower Fenwick Bus Lines","owner":"Mike Tran","decision":"2026-07-06","w1":"2026-04-13","cv":64,"fleet":"school bus","value":21800,"renewal":"2026-12-31","parent":null,"email":null,"v":[60,61,60,59,61,60,59,58,57,30,9,8],"l":[118,121,119,117,120,118,116,114,110,62,20,18],"status":"Active","notice":null,"insf":true,"set":"test","tests":"School bus fleet, start of summer","tickets":[],"marcus":{"answer":"No call","why":"End of school year; call in September if not back"},"v1":{"verdict":"ignore","reason":"school fleet, summer","result":"Hit","cause":null},"rec":{"verdict":"ignore","reason":"school fleet, summer","rule":"5 school season"}},{"id":"LKS-378","name":"Redfern Freight","owner":"Jon Pressley","decision":"2026-10-12","w1":"2026-07-20","cv":110,"fleet":"trucking","value":41800,"renewal":"2027-02-28","parent":null,"email":null,"v":[95,96,94,95,95,96,0,0,0,0,0,0],"l":[60,62,61,60,59,61,0,0,0,0,0,0],"status":"Active","notice":null,"insf":true,"set":"test","tests":"Re-keyed legacy ID (reads as 0)","tickets":[],"marcus":{"answer":"No call","why":"Legacy ID; usage continues under LKS-1051 from week of Aug 31; nothing dropped"},"v1":{"verdict":"ask Marcus","reason":"0 logins and no vehicles in last 3 weeks: missing feed or real zero? (OPEN 4); owner Jon Pressley; renews 2027-02-28; notice deadline 2026-11-30","result":"Miss","cause":"Asked when it should have decided"},"rec":{"verdict":"ignore","reason":"re-keyed to LKS-1051, flat at about 95","rule":"7 re-keyed ID stitch"}},{"id":"LKS-1061","name":"City of Hollisford","owner":"Dan Okafor","decision":"2026-07-06","w1":"2026-04-13","cv":240,"fleet":"city fleet","value":78980,"renewal":"2027-02-15","parent":null,"email":null,"v":[48,47,49,48,48,47,49,48,48,47,49,48],"l":[70,68,71,69,70,68,71,70,69,68,70,69],"status":"Active","notice":null,"insf":true,"set":"test","tests":"Flat but under-used (48 of 240), over $75K","tickets":[],"marcus":{"answer":"No call","why":"Under-used but nothing changed; adoption talk at the QBR, not this week"},"v1":{"verdict":"ignore","reason":"no drop against its own level","result":"Hit","cause":null},"rec":{"verdict":"ignore","reason":"no drop against its own level","rule":"13 no drop"}},{"id":"LKS-1024","name":"Harlan Ridge Transport","owner":"Mike Tran","decision":"2026-10-12","w1":"2026-07-20","cv":164,"fleet":"trucking","value":53970,"renewal":"2027-01-20","parent":null,"email":null,"v":[124,123,122,121,118,110,98,88,80,72,68,65],"l":[210,206,208,200,190,170,150,128,118,104,98,96],"status":"Active","notice":null,"insf":true,"set":"test","tests":"Real drop + full-export ticket, deadline in 10 days","tickets":[{"opened":"2026-10-02","priority":"P2","subject":"Request full export of all work orders and vehicle records"}],"marcus":{"answer":"Call","why":"Down ~44%, full-export ticket Oct 2, deadline Oct 22: this week or not at all"},"v1":{"verdict":"call this week","reason":"asked for full export 2026-10-02; goes to Marcus and Mike Tran (OPEN 3b)","result":"Hit","cause":null},"rec":{"verdict":"call this week","reason":"asked for full export Oct 2; goes to Marcus and Mike Tran (OPEN 3b)","rule":"3 full-export ticket"}},{"id":"LKS-1043","name":"Ashgrove Snow & Ice","owner":"Dan Okafor","decision":"2026-10-12","w1":"2026-07-20","cv":34,"fleet":"snowplow","value":15200,"renewal":"2027-03-31","parent":null,"email":null,"v":[4,3,3,3,4,3,3,3,4,3,3,3],"l":[6,5,5,4,6,5,4,5,5,4,5,4],"status":"Active","notice":null,"insf":true,"set":"test","tests":"Snowplow fleet, off-season low","tickets":[],"marcus":{"answer":"No call","why":"3 of 34 trucks is a normal summer; call in November if not back"},"v1":{"verdict":"ignore","reason":"plow fleet, in season","result":"Hit","cause":null},"rec":{"verdict":"ignore","reason":"plow fleet, in season","rule":"4 snowplow season"}},{"id":"LKS-1067","name":"Vantage Point Logistics","owner":"Kat Voss","decision":"2026-03-16","w1":"2025-12-22","cv":80,"fleet":"trucking","value":36500,"renewal":"2026-09-30","parent":null,"email":null,"v":[70,71,70,69,70,71,70,69,70,71,70,5],"l":[140,142,141,139,140,141,140,139,141,140,140,9],"status":"Active","notice":null,"insf":true,"set":"test","tests":"March outage week only","tickets":[],"marcus":{"answer":"No call","why":"Only drop is the Mar 9 app outage; flat otherwise"},"v1":{"verdict":"ignore","reason":"no drop against its own level","result":"Hit","cause":null},"rec":{"verdict":"ignore","reason":"no drop against its own level","rule":"13 no drop (after the Mar 9 incident week is thrown out)"}},{"id":"LKS-1082","name":"Hartbend Freight Lines","owner":"Kat Voss","decision":"2026-10-12","w1":"2026-07-20","cv":50,"fleet":"trucking","value":24600,"renewal":"2027-04-30","parent":"Ostrander Transport","email":null,"v":[48,49,48,48,48,49,48,0,0,0,0,0],"l":[96,98,95,97,96,94,90,0,0,0,0,0],"status":"Active","notice":null,"insf":true,"set":"test","tests":"Acquisition, whole fleet moved to parent","tickets":[],"marcus":{"answer":"No call","why":"48 vehicles show up the same week on parent Ostrander; no churn"},"v1":{"verdict":"ignore","reason":"merged into Ostrander Transport","result":"Hit","cause":null},"rec":{"verdict":"ignore","reason":"merged into Ostrander Transport","rule":"6 parent / merger"}},{"id":"LKS-1037","name":"City of Wexbridge","owner":"Kat Voss","decision":"2026-10-12","w1":"2026-07-20","cv":95,"fleet":"city fleet","value":39900,"renewal":"2027-03-15","parent":null,"email":"2026-10-06","v":[80,81,79,80,78,74,70,64,58,54,52,50],"l":[242,238,240,232,220,200,180,160,146,134,130,126],"status":"Active","notice":null,"insf":true,"set":"test","tests":"Real drop, fleet manager emailed 6 days ago","tickets":[],"marcus":{"answer":"Ask the account manager","why":"Usage says call, but fleet manager emailed Kat Oct 6; ask before calling"},"v1":{"verdict":"call this week","reason":"down 35% since week of 2026-07-20, logins down 46%","result":"Miss","cause":"Missed something Marcus knows"},"rec":{"verdict":"ask the owner","reason":"Kat Voss: down 35%, fleet manager wrote Oct 6, ask before calling","rule":"9 drop, but fleet manager wrote <=10 days ago"}},{"id":"LKS-1028","name":"Thackeray Motor Freight","owner":"Dan Okafor","decision":"2026-10-12","w1":"2026-07-20","cv":125,"fleet":"trucking","value":48200,"renewal":"2027-01-31","parent":null,"email":"2026-07-30","v":[110,111,109,110,108,107,100,92,84,74,66,61],"l":[300,302,298,296,290,250,160,110,80,62,56,53],"status":"Active","notice":null,"insf":true,"set":"test","tests":"Logins collapse first, vehicles follow","tickets":[],"marcus":{"answer":"Call","why":"Logins down to ~a fifth since Aug 24, vehicles following; rollout owner left"},"v1":{"verdict":"call this week","reason":"down 39% since week of 2026-07-20, logins down 81%","result":"Hit","cause":null},"rec":{"verdict":"call this week","reason":"down 39% since week of 2026-07-20, logins down 81%","rule":"9 drop >30% vs own level"}},{"id":"LKS-1053","name":"Sandover County Fleet Services","owner":"Kat Voss","decision":"2026-07-06","w1":"2026-04-13","cv":95,"fleet":"city fleet","value":44300,"renewal":"2026-12-01","parent":null,"email":"2026-05-08","v":[80,81,79,78,76,72,66,60,55,51,50,51],"l":[202,198,200,196,190,182,172,160,150,142,140,138],"status":"Active","notice":null,"insf":true,"set":"test","tests":"Real drop, fleet manager silent since May","tickets":[],"marcus":{"answer":"Call","why":"Down ~38%, holding three weeks"},"v1":{"verdict":"call this week","reason":"down 37% since week of 2026-04-13, logins down 30%","result":"Hit","cause":null},"rec":{"verdict":"call this week","reason":"down 37% since week of 2026-04-13, logins down 30%","rule":"9 drop >30% vs own level"}},{"id":"LKS-1034","name":"Oriel Valley Express","owner":"Renata Solis","decision":"2026-10-12","w1":"2026-07-20","cv":70,"fleet":"trucking","value":33700,"renewal":"2027-02-10","parent":null,"email":"2026-10-08","v":[60,61,59,60,58,55,50,46,42,38,36,34],"l":[180,182,178,176,168,150,132,118,106,98,94,90],"status":"Active","notice":null,"insf":true,"set":"test","tests":"Real drop, fleet manager emailed 4 days ago","tickets":[],"marcus":{"answer":"Ask the account manager","why":"Usage says call, but fleet manager emailed Renata Oct 8; ask before calling"},"v1":{"verdict":"call this week","reason":"down 40% since week of 2026-07-20, logins down 48%","result":"Miss","cause":"Missed something Marcus knows"},"rec":{"verdict":"ask the owner","reason":"Renata Solis: down 40%, fleet manager wrote Oct 8, ask before calling","rule":"9 drop, but fleet manager wrote <=10 days ago"}},{"id":"LKS-1066","name":"Cedar Hollow Public Works","owner":"Jon Pressley","decision":"2026-03-16","w1":"2025-12-22","cv":110,"fleet":"city fleet, incl. plows","value":38500,"renewal":"2026-09-30","parent":null,"email":"2026-03-10","v":[96,97,95,94,90,84,76,68,60,56,51,20],"l":[300,302,298,290,280,262,240,214,190,176,156,40],"status":"Active","notice":null,"insf":true,"set":"test","tests":"Mixed fleet drop bigger than the plows","tickets":[],"marcus":{"answer":"Ask the account manager","why":"Down ~48% is more than the plows; ask Jon whether the fleet manager said anything"},"v1":{"verdict":"call this week","reason":"down 42% since week of 2025-12-22, logins down 42%","result":"Miss","cause":"Missed something Marcus knows"},"rec":{"verdict":"ask the owner","reason":"Jon Pressley: down 42%, fleet manager wrote Mar 10, ask before calling","rule":"9 drop, but fleet manager wrote <=10 days ago"}},{"id":"LKS-1064","name":"Ingram Tank Lines","owner":"Mike Tran","decision":"2026-07-06","w1":"2026-04-13","cv":70,"fleet":"trucking","value":29800,"renewal":"2027-01-31","parent":null,"email":null,"v":[62,63,62,61,62,30,62,63,62,61,62,63],"l":[124,126,125,122,124,60,123,126,124,122,125,126],"status":"Active","notice":null,"insf":true,"set":"test","tests":"Single-week dip","tickets":[],"marcus":{"answer":"No call","why":"One week down and back; a single week is not a signal"},"v1":{"verdict":"ignore","reason":"no drop against its own level","result":"Hit","cause":null},"rec":{"verdict":"ignore","reason":"no drop against its own level","rule":"13 no drop"}},{"id":"LKS-1068","name":"City of Stonemere","owner":"Dan Okafor","decision":"2026-03-16","w1":"2025-12-22","cv":72,"fleet":"city fleet","value":31900,"renewal":"2026-11-30","parent":null,"email":null,"v":[60,61,60,59,60,61,60,59,60,61,60,4],"l":[180,183,181,178,180,182,181,179,180,182,181,11],"status":"Active","notice":null,"insf":true,"set":"test","tests":"March outage week only","tickets":[],"marcus":{"answer":"No call","why":"Only drop is the Mar 9 app outage; flat otherwise"},"v1":{"verdict":"ignore","reason":"no drop against its own level","result":"Hit","cause":null},"rec":{"verdict":"ignore","reason":"no drop against its own level","rule":"13 no drop (after the Mar 9 incident week is thrown out)"}},{"id":"LKS-1074","name":"Whitlock Carriers","owner":"Renata Solis","decision":"2026-03-16","w1":"2025-12-22","cv":50,"fleet":"trucking","value":23400,"renewal":"2026-10-31","parent":null,"email":null,"v":[44,45,44,45,44,43,44,45,44,43,44,3],"l":[88,90,89,90,88,87,88,90,88,86,88,6],"status":"Active","notice":null,"insf":true,"set":"test","tests":"March outage week only","tickets":[],"marcus":{"answer":"No call","why":"Only drop is the Mar 9 app outage; flat otherwise"},"v1":{"verdict":"ignore","reason":"no drop against its own level","result":"Hit","cause":null},"rec":{"verdict":"ignore","reason":"no drop against its own level","rule":"13 no drop (after the Mar 9 incident week is thrown out)"}},{"id":"LKS-1026","name":"Port Alder Municipal Fleet","owner":"Jon Pressley","decision":"2026-10-12","w1":"2026-07-20","cv":85,"fleet":"city fleet","value":37600,"renewal":"2027-04-01","parent":null,"email":"2026-08-14","v":[75,76,74,74,72,68,62,56,52,47,45,43],"l":[220,222,218,214,206,190,170,150,134,124,118,114],"status":"Active","notice":null,"insf":true,"set":"test","tests":"Real drop, fleet manager gone quiet","tickets":[],"marcus":{"answer":"Call","why":"Down ~42%, holding three weeks"},"v1":{"verdict":"call this week","reason":"down 40% since week of 2026-07-20, logins down 46%","result":"Hit","cause":null},"rec":{"verdict":"call this week","reason":"down 40% since week of 2026-07-20, logins down 46%","rule":"9 drop >30% vs own level"}},{"id":"LKS-1054","name":"Fairhaven School District","owner":"Dan Okafor","decision":"2026-07-06","w1":"2026-04-13","cv":90,"fleet":"school bus","value":26900,"renewal":"2027-01-15","parent":null,"email":null,"v":[84,85,84,83,84,85,82,83,80,52,14,11],"l":[160,163,161,159,161,162,158,160,152,98,26,21],"status":"Active","notice":null,"insf":true,"set":"test","tests":"School bus fleet, start of summer","tickets":[],"marcus":{"answer":"No call","why":"End of school year; call in September if not back"},"v1":{"verdict":"ignore","reason":"school fleet, summer","result":"Hit","cause":null},"rec":{"verdict":"ignore","reason":"school fleet, summer","rule":"5 school season"}},{"id":"LKS-1049","name":"Fernbrook Public Works","owner":"Mike Tran","decision":"2026-10-12","w1":"2026-07-20","cv":100,"fleet":"city fleet","value":42100,"renewal":"2027-05-15","parent":null,"email":null,"v":[88,87,88,89,88,87,88,88,87,null,null,88],"l":[140,138,141,139,140,137,139,140,138,null,null,139],"status":"Active","notice":null,"insf":true,"set":"test","tests":"Blank weeks (feed outage)","tickets":[],"marcus":{"answer":"No call","why":"Blank is missing data, not zero; flat either side"},"v1":{"verdict":"ignore","reason":"no drop against its own level","result":"Hit","cause":null},"rec":{"verdict":"ignore","reason":"no drop against its own level","rule":"13 no drop (after blank weeks are thrown out)"}},{"id":"LKS-1058","name":"Kettle Creek Snow Removal","owner":"Jon Pressley","decision":"2026-07-06","w1":"2026-04-13","cv":22,"fleet":"snowplow","value":11300,"renewal":"2026-12-15","parent":null,"email":null,"v":[5,4,3,3,2,2,3,2,2,2,2,2],"l":[9,8,6,6,4,4,5,4,4,3,4,4],"status":"Active","notice":null,"insf":true,"set":"test","tests":"Snowplow fleet, summer low","tickets":[],"marcus":{"answer":"No call","why":"2 of 22 trucks is a normal summer"},"v1":{"verdict":"ignore","reason":"plow fleet, in season","result":"Hit","cause":null},"rec":{"verdict":"ignore","reason":"plow fleet, in season","rule":"4 snowplow season"}},{"id":"LKS-1076","name":"Prewitt Cartage","owner":"Mike Tran","decision":"2026-03-16","w1":"2025-12-22","cv":64,"fleet":"trucking","value":22600,"renewal":"2026-06-15","parent":null,"email":"2025-12-18","v":[55,56,54,53,50,46,42,38,35,33,31,8],"l":[160,162,158,156,148,136,122,110,100,94,89,20],"status":"Active","notice":null,"insf":true,"set":"test","tests":"Real drop, deadline this week","tickets":[],"marcus":{"answer":"Call","why":"Down ~39%; deadline Mar 17: this week or not at all"},"v1":{"verdict":"call this week","reason":"down 40% since week of 2025-12-22, logins down 41%","result":"Hit","cause":null},"rec":{"verdict":"call this week","reason":"down 40% since week of 2025-12-22, logins down 41%","rule":"9 drop >30% vs own level"}},{"id":"LKS-1060","name":"Mercer Freight Lines","owner":"Renata Solis","decision":"2026-07-06","w1":"2026-04-13","cv":105,"fleet":"trucking","value":45500,"renewal":"2027-03-01","parent":null,"email":"2026-06-22","v":[92,93,91,92,93,92,91,92,93,92,91,92],"l":[190,192,189,191,190,193,190,189,192,191,190,191],"status":"Active","notice":null,"insf":true,"set":"test","tests":"Flat control","tickets":[],"marcus":{"answer":"No call","why":"Flat against its own level"},"v1":{"verdict":"ignore","reason":"no drop against its own level","result":"Hit","cause":null},"rec":{"verdict":"ignore","reason":"no drop against its own level","rule":"13 no drop"}},{"id":"LKS-1048","name":"Calloway Express","owner":"Kat Voss","decision":"2026-10-12","w1":"2026-07-20","cv":60,"fleet":"trucking","value":26700,"renewal":"2027-02-20","parent":null,"email":null,"v":[52,53,52,51,52,53,52,52,51,52,24,52],"l":[110,112,111,109,110,112,111,110,109,111,52,110],"status":"Active","notice":null,"insf":true,"set":"test","tests":"Single-week dip","tickets":[],"marcus":{"answer":"No call","why":"One week down and back"},"v1":{"verdict":"ignore","reason":"no drop against its own level","result":"Hit","cause":null},"rec":{"verdict":"ignore","reason":"no drop against its own level","rule":"13 no drop"}},{"id":"LKS-1030","name":"Pinecrest Hauling","owner":"Mike Tran","decision":"2026-10-12","w1":"2026-07-20","cv":140,"fleet":"trucking","value":46070,"renewal":"2027-03-01","parent":"Dunmore Logistics Group","email":null,"v":[114,115,113,114,114,113,57,58,57,58,57,58],"l":[150,152,148,150,151,149,92,90,91,90,92,90],"status":"Active","notice":null,"insf":true,"set":"test","tests":"Partial merger: only ~half the lost trucks arrived","tickets":[],"marcus":{"answer":"Ask the account manager","why":"Half the fleet left; only ~30 of 57 arrived on Dunmore; ask Mike where the rest went"},"v1":{"verdict":"ignore","reason":"merged into Dunmore Logistics Group","result":"Miss","cause":"A rule decided wrong"},"rec":{"verdict":"ask the owner","reason":"Mike Tran: fell 56, only 29 arrived on Dunmore Logistics Group","rule":"6 parent / merger"}},{"id":"LKS-1079","name":"Keough Municipal Utilities","owner":"Kat Voss","decision":"2026-03-16","w1":"2025-12-22","cv":52,"fleet":"utility","value":27400,"renewal":"2026-08-01","parent":null,"email":"2026-01-09","v":[44,45,43,42,40,37,34,31,28,26,24,6],"l":[130,132,128,124,116,104,92,82,72,68,63,15],"status":"Active","notice":null,"insf":true,"set":"test","tests":"Real drop, fleet manager silent since January","tickets":[],"marcus":{"answer":"Call","why":"Down ~40%, holding three weeks"},"v1":{"verdict":"call this week","reason":"down 41% since week of 2025-12-22, logins down 48%","result":"Hit","cause":null},"rec":{"verdict":"call this week","reason":"down 41% since week of 2025-12-22, logins down 48%","rule":"9 drop >30% vs own level"}},{"id":"LKS-1078","name":"Galloway Van Lines","owner":"Jon Pressley","decision":"2026-03-16","w1":"2025-12-22","cv":90,"fleet":"trucking","value":47900,"renewal":"2026-10-15","parent":null,"email":"2026-01-16","v":[78,79,77,75,71,66,60,54,49,45,42,10],"l":[210,212,208,200,186,166,144,124,108,98,90,22],"status":"Active","notice":null,"insf":true,"set":"test","tests":"Real drop, fleet manager silent since January","tickets":[],"marcus":{"answer":"Call","why":"Down ~46%, holding three weeks"},"v1":{"verdict":"call this week","reason":"down 42% since week of 2025-12-22, logins down 53%","result":"Hit","cause":null},"rec":{"verdict":"call this week","reason":"down 42% since week of 2025-12-22, logins down 53%","rule":"9 drop >30% vs own level"}},{"id":"LKS-1027","name":"Tallgrass Unified School District","owner":"Kat Voss","decision":"2026-10-12","w1":"2026-07-20","cv":176,"fleet":"school bus","value":51300,"renewal":"2027-02-01","parent":null,"email":null,"v":[22,21,20,21,20,22,24,27,28,28,29,30],"l":[30,29,28,30,28,31,34,40,42,41,43,44],"status":"Active","notice":null,"insf":true,"set":"test","tests":"School fleet still short in October","tickets":[],"marcus":{"answer":"Call","why":"Should be back by Sep 7; still ~28 of 176; deadline Nov 3"},"v1":{"verdict":"ask Marcus","reason":"school fleet after Aug 31, still under 50% of contracted vehicles (16%) (OPEN 5a); owner Kat Voss; renews 2027-02-01; notice deadline 2026-11-03","result":"Miss","cause":"Asked when it should have decided"},"rec":{"verdict":"call this week","reason":"school fleet, still at 29 of 176 in October","rule":"5 school season"}},{"id":"LKS-1062","name":"Bramwell Distribution","owner":"Kat Voss","decision":"2026-07-06","w1":"2026-04-13","cv":90,"fleet":"trucking","value":34800,"renewal":"2027-05-01","parent":null,"email":null,"v":[20,35,52,70,84,90,88,82,78,76,75,75],"l":[40,70,100,130,150,160,150,140,132,128,126,125],"status":"Active","notice":null,"insf":true,"set":"test","tests":"New account settling after ramp","tickets":[],"marcus":{"answer":"No call","why":"New account still ramping; dip after peak is settling"},"v1":{"verdict":"ignore","reason":"no drop against its own level","result":"Hit","cause":null},"rec":{"verdict":"ignore","reason":"no drop against its own level","rule":"13 no drop"}},{"id":"LKS-1046","name":"Millbrook Community Schools","owner":"Renata Solis","decision":"2026-10-12","w1":"2026-07-20","cv":120,"fleet":"school bus","value":32500,"renewal":"2027-01-31","parent":null,"email":null,"v":[18,17,18,16,18,20,52,94,96,97,95,96],"l":[26,25,27,24,26,30,80,150,154,156,153,155],"status":"Active","notice":null,"insf":true,"set":"test","tests":"School fleet back in September","tickets":[],"marcus":{"answer":"No call","why":"Back to full count since September"},"v1":{"verdict":"ignore","reason":"school fleet, back","result":"Hit","cause":null},"rec":{"verdict":"ignore","reason":"school fleet, back","rule":"5 school season"}},{"id":"LKS-1081","name":"Kenbury Water District","owner":"Dan Okafor","decision":"2026-07-06","w1":"2026-04-13","cv":60,"fleet":"utility","value":31200,"renewal":"2027-01-10","parent":null,"email":"2026-05-14","v":[50,51,49,49,47,45,42,38,35,31,30,29],"l":[150,152,148,144,136,124,110,98,88,80,76,74],"status":"Active","notice":null,"insf":true,"set":"test","tests":"Real drop, fleet manager silent since May","tickets":[],"marcus":{"answer":"Call","why":"Down ~40%, holding three weeks"},"v1":{"verdict":"call this week","reason":"down 40% since week of 2026-04-13, logins down 49%","result":"Hit","cause":null},"rec":{"verdict":"call this week","reason":"down 40% since week of 2026-04-13, logins down 49%","rule":"9 drop >30% vs own level"}},{"id":"LKS-1201","name":"Alderpoint Couriers","owner":"Renata Solis","decision":"2026-10-12","w1":"2026-07-20","cv":60,"fleet":"trucking","value":28800,"renewal":"2026-12-31","parent":null,"email":null,"v":[50,51,49,48,45,40,36,32,28,26,25,24],"l":[120,121,118,112,100,90,80,70,62,58,55,54],"status":"Notice given","notice":"2026-09-04","insf":true,"set":"stress","tests":"Account already gave notice","tickets":[]},{"id":"LKS-1202","name":"Ridgeway Paving Co.","owner":null,"decision":"2026-10-12","w1":"2026-07-20","cv":40,"fleet":null,"value":null,"renewal":null,"parent":null,"email":null,"v":[30,31,30,29,30,31,30,29,30,31,30,29],"l":[60,62,61,59,60,62,61,59,60,61,60,59],"status":"Active","notice":null,"insf":false,"set":"stress","tests":"Row matches nothing in Salesforce","tickets":[]},{"id":"LKS-1203","name":"Quarry Road Contractors","owner":"Dan Okafor","decision":"2026-10-12","w1":"2026-07-20","cv":45,"fleet":"contractor","value":19700,"renewal":"2027-04-15","parent":null,"email":null,"v":[38,39,38,37,38,39,38,37,38,null,null,null],"l":[80,82,81,79,80,82,81,79,80,null,null,null],"status":"Active","notice":null,"insf":true,"set":"stress","tests":"Feed stopped: last three weeks blank","tickets":[]},{"id":"LKS-1204","name":"Tamsin Bay Freight","owner":"Jon Pressley","decision":"2026-10-12","w1":"2026-07-20","cv":80,"fleet":"trucking","value":35100,"renewal":"2027-05-31","parent":null,"email":null,"v":[70,71,70,69,70,71,70,69,70,69,70,70],"l":[200,202,198,190,178,160,140,126,118,112,110,108],"status":"Active","notice":null,"insf":true,"set":"stress","tests":"Logins fall, vehicles hold","tickets":[]},{"id":"LKS-1205","name":"Holbrook County Roads","owner":"Kat Voss","decision":"2026-10-12","w1":"2026-07-20","cv":120,"fleet":"city fleet","value":52800,"renewal":"2027-01-25","parent":null,"email":null,"v":[46,45,46,47,46,45,46,47,46,46,46,46],"l":[90,88,91,90,89,88,90,91,90,89,90,90],"status":"Active","notice":null,"insf":true,"set":"stress","tests":"Flat but under 50%, renews in 105 days","tickets":[]},{"id":"LKS-1206","name":"Silas Creek Distribution","owner":"Mike Tran","decision":"2026-10-12","w1":"2026-07-20","cv":75,"fleet":"trucking","value":30400,"renewal":"2027-06-30","parent":null,"email":null,"v":[64,65,64,63,64,65,64,63,64,65,64,64],"l":[150,152,149,151,150,148,151,150,149,150,151,150],"status":"Active","notice":null,"insf":true,"set":"stress","tests":"Admin contact changed six weeks ago","tickets":[{"opened":"2026-09-18","priority":"P3","subject":"Change account admin contact"}]},{"id":"LKS-1207","name":"Meridian Line Haul","owner":"Renata Solis","decision":"2026-10-12","w1":"2026-07-20","cv":180,"fleet":"trucking","value":96400,"renewal":"2026-12-15","parent":null,"email":null,"v":[150,152,148,146,140,130,120,112,104,96,93,90],"l":[400,402,398,390,370,340,310,280,260,244,236,228],"status":"Active","notice":null,"insf":true,"set":"stress","tests":"Real drop, over $75K, deadline already passed","tickets":[]},{"id":"LKS-1208","name":"Cobalt Ridge Haulers","owner":"Jon Pressley","decision":"2026-10-12","w1":"2026-07-20","cv":40,"fleet":"trucking","value":17900,"renewal":"2027-03-31","parent":null,"email":null,"v":[34,35,34,33,34,35,34,0,0,0,0,0],"l":[70,72,71,69,70,72,70,0,0,0,0,0],"status":"Active","notice":null,"insf":true,"set":"stress","tests":"Goes to zero, no same-name ID","tickets":[]},{"id":"LKS-1209","name":"Northfork Snow Contractors","owner":"Kat Voss","decision":"2026-12-07","w1":"2026-09-14","cv":40,"fleet":"snowplow","value":16300,"renewal":"2027-04-15","parent":null,"email":null,"v":[6,7,6,7,6,7,7,8,8,8,8,8],"l":[10,11,10,12,11,12,13,14,14,15,15,15],"status":"Active","notice":null,"insf":true,"set":"stress","tests":"Plows still idle in December","tickets":[]}],"dayOne":{"LKS-378":{"name":"Redfern Freight","cv":110,"v":[95,96,94,95,95,96,0,0,0,0,0,0],"l":[60,62,61,60,59,61,0,0,0,0,0,0]},"LKS-1024":{"name":"Harlan Ridge Transport","cv":164,"v":[124,123,122,121,118,110,98,88,80,72,68,65],"l":[210,206,208,200,190,170,150,128,118,104,98,96]},"LKS-1043":{"name":"Ashgrove Snow & Ice","cv":34,"v":[4,3,3,3,4,3,3,3,4,3,3,3],"l":[6,5,5,4,6,5,4,5,5,4,5,4]},"LKS-1082":{"name":"Hartbend Freight Lines","cv":50,"v":[48,49,48,48,48,49,48,0,0,0,0,0],"l":[96,98,95,97,96,94,90,0,0,0,0,0]},"LKS-1037":{"name":"City of Wexbridge","cv":95,"v":[80,81,79,80,78,74,70,64,58,54,52,50],"l":[242,238,240,232,220,200,180,160,146,134,130,126]},"LKS-1028":{"name":"Thackeray Motor Freight","cv":125,"v":[110,111,109,110,108,107,100,92,84,74,66,61],"l":[300,302,298,296,290,250,160,110,80,62,56,53]},"LKS-1034":{"name":"Oriel Valley Express","cv":70,"v":[60,61,59,60,58,55,50,46,42,38,36,34],"l":[180,182,178,176,168,150,132,118,106,98,94,90]},"LKS-1026":{"name":"Port Alder Municipal Fleet","cv":85,"v":[75,76,74,74,72,68,62,56,52,47,45,43],"l":[220,222,218,214,206,190,170,150,134,124,118,114]},"LKS-1049":{"name":"Fernbrook Public Works","cv":100,"v":[88,87,88,89,88,87,88,88,87,null,null,88],"l":[140,138,141,139,140,137,139,140,138,null,null,139]},"LKS-1048":{"name":"Calloway Express","cv":60,"v":[52,53,52,51,52,53,52,52,51,52,24,52],"l":[110,112,111,109,110,112,111,110,109,111,52,110]},"LKS-1030":{"name":"Pinecrest Hauling","cv":140,"v":[114,115,113,114,114,113,57,58,57,58,57,58],"l":[150,152,148,150,151,149,92,90,91,90,92,90]},"LKS-1027":{"name":"Tallgrass Unified School District","cv":176,"v":[22,21,20,21,20,22,24,27,28,28,29,30],"l":[30,29,28,30,28,31,34,40,42,41,43,44]},"LKS-1046":{"name":"Millbrook Community Schools","cv":120,"v":[18,17,18,16,18,20,52,94,96,97,95,96],"l":[26,25,27,24,26,30,80,150,154,156,153,155]},"LKS-1102":{"name":"Dunmore Logistics Group","cv":100,"v":[56,57,56,56,55,56,86,86,85,86,86,85],"l":[90,92,90,91,89,90,131,130,128,130,131,129],"owner":"Mike Tran"},"LKS-1117":{"name":"Ostrander Transport","cv":190,"v":[130,131,130,130,129,131,130,174,175,175,175,175],"l":[260,262,259,261,258,262,260,350,352,351,350,352],"owner":"Kat Voss"},"LKS-1051":{"name":"Redfern Freight","cv":110,"v":[null,null,null,null,null,null,95,94,95,96,95,95],"l":[null,null,null,null,null,null,61,60,62,60,61,60],"owner":"Jon Pressley"},"LKS-1201":{"name":"Alderpoint Couriers","cv":60,"v":[50,51,49,48,45,40,36,32,28,26,25,24],"l":[120,121,118,112,100,90,80,70,62,58,55,54]},"LKS-1202":{"name":"Ridgeway Paving Co.","cv":40,"v":[30,31,30,29,30,31,30,29,30,31,30,29],"l":[60,62,61,59,60,62,61,59,60,61,60,59]},"LKS-1203":{"name":"Quarry Road Contractors","cv":45,"v":[38,39,38,37,38,39,38,37,38,null,null,null],"l":[80,82,81,79,80,82,81,79,80,null,null,null]},"LKS-1204":{"name":"Tamsin Bay Freight","cv":80,"v":[70,71,70,69,70,71,70,69,70,69,70,70],"l":[200,202,198,190,178,160,140,126,118,112,110,108]},"LKS-1205":{"name":"Holbrook County Roads","cv":120,"v":[46,45,46,47,46,45,46,47,46,46,46,46],"l":[90,88,91,90,89,88,90,91,90,89,90,90]},"LKS-1206":{"name":"Silas Creek Distribution","cv":75,"v":[64,65,64,63,64,65,64,63,64,65,64,64],"l":[150,152,149,151,150,148,151,150,149,150,151,150]},"LKS-1207":{"name":"Meridian Line Haul","cv":180,"v":[150,152,148,146,140,130,120,112,104,96,93,90],"l":[400,402,398,390,370,340,310,280,260,244,236,228]},"LKS-1208":{"name":"Cobalt Ridge Haulers","cv":40,"v":[34,35,34,33,34,35,34,0,0,0,0,0],"l":[70,72,71,69,70,72,70,0,0,0,0,0]}},"dayOneW1":"2026-07-20","sfParent":{"Hartbend Freight Lines":"Ostrander Transport","Pinecrest Hauling":"Dunmore Logistics Group","Dunmore Logistics Group":"Dunmore Logistics Group","Ostrander Transport":"Ostrander Transport"},"incidents":[{"week":"2026-03-09","accounts":60,"label":"March mobile-app outage"}]};
+</script>
+<script>
+(function () {
+const E = Engine;
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const VC = { 'call this week': 'call', 'ignore': 'ignore', 'ask Marcus': 'marcus', 'ask the owner': 'owner' };
+const VORDER = { 'call this week': 0, 'ask Marcus': 1, 'ask the owner': 2, 'ignore': 3 };
+const clone = o => JSON.parse(JSON.stringify(o));
+const fmtMoney = v => v == null || isNaN(v) ? '\u2014' : '$' + Math.round(v).toLocaleString('en-US');
+const fmtDate = s => { if (!s) return '\u2014'; const n = E.dn(s); return E.mon(n) + ', ' + s.slice(0, 4); };
+const short = s => s ? E.mon(E.dn(s)) : '\u2014';
+let toastT;
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 3800); }
+
+/* ---------------- hero dots ---------------- */
+(function dots() {
+  const g = $('#dotgrid'); let seed = 7;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const pick = new Map(); const kinds = [...Array(29).fill('call'), ...Array(3).fill('marcus'), ...Array(2).fill('owner')];
+  while (pick.size < 34) { const i = Math.floor(rnd() * 900); if (!pick.has(i)) pick.set(i, kinds[pick.size]); }
+  const frag = document.createDocumentFragment(); let k = 0;
+  for (let i = 0; i < 900; i++) {
+    const d = document.createElement('i');
+    if (pick.has(i)) { d.className = 'k'; d.dataset.v = pick.get(i); d.style.transitionDelay = reduce ? '0s' : (0.25 + (k++ % 34) * 0.035) + 's'; }
+    frag.appendChild(d);
+  }
+  g.appendChild(frag);
+  const st = document.createElement('style');
+  st.textContent = '#dotgrid.done i[data-v=call]{background:var(--call)}#dotgrid.done i[data-v=marcus]{background:var(--marcus)}#dotgrid.done i[data-v=owner]{background:var(--owner)}';
+  document.head.appendChild(st);
+  if (reduce) g.classList.add('done'); else setTimeout(() => g.classList.add('done'), 500);
+})();
+
+/* ---------------- discovery ---------------- */
+const FINDINGS = [
+  { g: 'From the interview', t: 'The signal came in time', how: 'Found by asking', q: '\u201cTell us about it.\u201d', big: '10 of the 14 lost accounts were down more than 30% at least six weeks before notice.', so: 'The failure is timing and triage, not detection. The agent runs every Monday against each account\u2019s own level.', rule: 'Rule 9' },
+  { g: 'From the interview', t: 'Seasons look like churn', how: 'Found by asking', q: '\u201cWhat happened last time?\u201d', big: '28 of the 30 accounts on the July call list were school fleets on summer break.', so: 'Snowplows and school buses keep their own calendar. Renata calls districts in September and plow contractors in November.', rule: 'Rules 4 and 5' },
+  { g: 'From the interview', t: 'Fleet managers go quiet', how: 'Found by asking', q: '\u201cHow did you find out each one was leaving?\u201d', big: 'Renata, who loses the fewest customers, notices when a fleet manager stops emailing.', so: 'The best early signal lives in no system. The agent checks the date of the last email, never its text.', rule: 'Rule 9' },
+  { g: 'From the interview', t: 'Mergers fake a drop', how: 'Found by asking', q: '\u201cWhen did usage drop but nothing was wrong?\u201d', big: 'Birchwood looked like it fell 50% while Kestrel doubled. Same trucks, new parent.', so: 'Accounts that share a parent are judged together, and the siblings\u2019 rise must cover the fall.', rule: 'Rule 6' },
+  { g: 'From the interview', t: 'The product broke, not the customer', how: 'Found by asking', q: '\u201cWhen was the product itself the problem?\u201d', big: 'A March mobile-app outage pushed usage down everywhere for four days.', so: 'Outage weeks are found from the cluster of 60 P1 tickets on 60 accounts and thrown out for everyone.', rule: 'Step 1' },
+  { g: 'From the files', t: 'Export requests come first', how: 'Found in', q: 'Open support tickets', big: '3 of the 10 visible losses asked support for a full export about two weeks before notice.', so: 'Support closed the tickets and never told the account manager, though Playbook 6.2 says to. The agent puts these at the top of the list.', rule: 'Rule 3' },
+  { g: 'From the files', t: 'Blank is not zero', how: 'Found in', q: 'Renata\u2019s notes on spotting trouble', big: 'A blank week means the feed didn\u2019t come through, not that the customer stopped.', so: 'Blank weeks are dropped from the comparison. Three blank weeks in a row go to the owner.', rule: 'Rule 8' },
+  { g: 'From the files', t: 'The written rule nobody uses', how: 'Found in', q: 'The CS playbook, section 2.2', big: 'The playbook says flag a 20% week-over-week drop in logins. Marcus actually sorts on vehicles over the quarter.', so: 'The agent follows the applied rule: vehicles down more than 30%, held over three weeks, against the account\u2019s own level.', rule: 'Rule 9' },
+  { g: 'From the files', t: 'Only 12 weeks of history', how: 'Found in', q: 'The Looker usage export', big: 'There is no baseline beyond 12 weeks, plus the contracted vehicle count.', so: 'Slow decliners look flat inside the window. Saving every Monday export fixes this over time.', rule: 'OPEN 1a' }
+];
+(function finder() {
+  const ul = $('#flist'); let html = '', g = '';
+  FINDINGS.forEach((f, i) => {
+    if (f.g !== g) { g = f.g; html += `<li class="grp" role="presentation">${g}</li>`; }
+    html += `<li role="presentation"><button role="tab" id="ft${i}" aria-selected="${i === 0}" aria-controls="fbody" data-i="${i}">${esc(f.t)}</button></li>`;
+  });
+  ul.innerHTML = html;
+  const show = i => {
+    const f = FINDINGS[i];
+    ul.querySelectorAll('button').forEach(b => b.setAttribute('aria-selected', b.dataset.i == i));
+    $('#fbody').setAttribute('aria-labelledby', 'ft' + i);
+    $('#fbody').innerHTML = `<p class="q">${f.how} <b>${esc(f.q)}</b></p><p class="big">${esc(f.big)}</p>
+      <div class="arrow"><span>What the agent does</span><div><p style="margin:0 0 10px">${esc(f.so)}</p><span class="tag">${f.rule}</span></div></div>`;
+  };
+  ul.addEventListener('click', e => { const b = e.target.closest('button'); if (b) show(+b.dataset.i); });
+  ul.addEventListener('keydown', e => {
+    if (!['ArrowDown', 'ArrowUp'].includes(e.key)) return;
+    const bs = [...ul.querySelectorAll('button')]; const i = bs.indexOf(document.activeElement); if (i < 0) return;
+    e.preventDefault(); const j = (i + (e.key === 'ArrowDown' ? 1 : -1) + bs.length) % bs.length; bs[j].focus(); show(+bs[j].dataset.i);
+  });
+  show(0);
+})();
+
+/* ---------------- process ---------------- */
+const STAGES = [
+  { d: 'Oct 7', t: 'Ideation', items: ['Picked Case 3, the account-health alert.', 'Mapped the task: what is done, with what, who decides, where it breaks.', 'Wrote 10 assumptions and a hypothesis need, so each could be tested on the user.'], kn: '10', kl: 'assumptions written down to be tested', chips: ['Group 2 task map', 'v1 assumption map'] },
+  { d: 'Oct 14', t: 'Interview', items: ['25 minutes with Marcus, asking only about past events.', 'The first pass found 3 of 5 hidden facts. The debrief showed which questions we missed; a second pass found the other 2.', 'Earned all four Door 2 files: Salesforce, support tickets, the churn post-mortem, Renata\u2019s notes.'], kn: '5 of 5', kl: 'hidden facts found', chips: ['interview transcript', '4 Door 2 files'] },
+  { d: 'Oct 14', t: 'Rewrite', items: ['Task map moved from a quarterly sort to a weekly check against each account\u2019s own level.', 'Need rewritten around a decision, not a data view.', 'PRD v1 set the core rule: active vehicles down more than 30% against the account\u2019s own level.'], kn: '26', kl: 'assumptions in v2; all 10 originals corrected', chips: ['task map v2', 'assumption_list_v2.md', 'need_statement_v2.md', 'build_doc_v1.md'] },
+  { d: 'Oct 21', t: 'Harden and build', items: ['PRD v2: 18 changes, each tagged with where it came from.', 'Anything unsettled became an OPEN rule that the agent hands back instead of guessing.', 'Claude showed its plan, waited for our OK, then built the agent and ran it on all 900 rows.'], kn: '18', kl: 'spec changes, each with a source', chips: ['prd_v2.md', 'agent_instructions.md', 'test_run_v1.csv'] },
+  { d: 'Oct 28', t: 'Score and fix', items: ['First test: 24 of 30.', 'Each miss traced to one of three causes. We fixed rules, never individual rows.', 'Rerun: 30 of 30, with no row worse. The course bar was 27.'], kn: '24 \u2192 30', kl: 'of 30, against Marcus\u2019s answers', chips: ['Table 2 score doc', 'prd_v3.md', 'agent_v3.py', 'test_run_v2.csv'] },
+  { d: 'Nov 4', t: 'Verify and demo', items: ['A fresh run from clean copies of the files: 30 of 30, identical reasons.', 'It found the March outage week on its own from the ticket cluster.', 'On the live Oct 12 export: 900 accounts down to 34 that need a person.'], kn: '900 \u2192 34', kl: 'on the live Oct 12 export', chips: ['test_run_v3.csv', 'this page'] }
+];
+(function steps() {
+  const el = $('#steps');
+  el.innerHTML = STAGES.map((s, i) => `<button role="tab" id="sg${i}" aria-controls="stage" aria-selected="${i === 4}" data-i="${i}"><span class="sn">${i + 1}</span><span class="st">${s.t}</span><span class="sd">${s.d}</span></button>`).join('');
+  const show = i => {
+    const s = STAGES[i];
+    el.querySelectorAll('button').forEach(b => b.setAttribute('aria-selected', b.dataset.i == i));
+    $('#stage').setAttribute('aria-labelledby', 'sg' + i);
+    $('#stage').innerHTML = `<ul>${s.items.map(x => `<li>${esc(x)}</li>`).join('')}</ul>
+      <aside><div class="kn">${s.kn}</div><div class="kl">${s.kl}</div><div class="chips">${s.chips.map(c => `<span class="chip">${esc(c)}</span>`).join('')}</div></aside>`;
+  };
+  el.addEventListener('click', e => { const b = e.target.closest('button'); if (b) show(+b.dataset.i); });
+  el.addEventListener('keydown', e => {
+    if (!['ArrowRight', 'ArrowLeft'].includes(e.key)) return;
+    const bs = [...el.querySelectorAll('button')]; const i = bs.indexOf(document.activeElement); if (i < 0) return;
+    const j = (i + (e.key === 'ArrowRight' ? 1 : -1) + bs.length) % bs.length; bs[j].focus(); show(j);
+  });
+  show(4);
+})();
+
+/* ---------------- console state ---------------- */
+const S = {
+  base: {}, items: {}, sets: { test: [], stress: [], loaded: [] },
+  env: { dayOne: clone(DATA.dayOne), dayOneW1: DATA.dayOneW1, sfParent: DATA.sfParent, incidents: DATA.incidents },
+  loadedEnv: null, loaded: {}, policy: clone(E.DEFAULT),
+  set: 'test', sel: 'LKS-1024', view: 'acct', vf: 'all', q: '', dateF: 'all', showIgnored: false,
+  edited: new Set(), human: {}, editing: false, open: {}, res: {}, def: {}
+};
+DATA.items.forEach(it => { S.base[it.id] = clone(it); S.items[it.id] = clone(it); S.sets[it.set].push(it.id); });
+const envFor = it => it.set === 'loaded' ? S.loadedEnv : S.env;
+
+function recompute(dataChanged) {
+  const t0 = performance.now();
+  for (const set of ['test', 'stress', 'loaded']) for (const id of S.sets[set]) {
+    const it = S.items[id];
+    S.res[id] = E.run(it, S.policy, envFor(it));
+    if (dataChanged || !S.def[id]) S.def[id] = E.run(it, E.DEFAULT, envFor(it));
+  }
+  return performance.now() - t0;
+}
+const scored = () => S.sets.test.filter(id => S.items[id].marcus);
+const matches = id => { const it = S.items[id]; return it.marcus ? E.toMarcus(S.res[id].verdict) === it.marcus.answer : null; };
+
+/* ---------------- policy controls ---------------- */
+const KNOBS = [
+  { k: 'drop', l: 'Drop line', min: 10, max: 60, u: '%', tags: ['Marcus\u2019s rule'] },
+  { k: 'merge', l: 'Merger coverage', min: 0, max: 100, u: '%', tags: ['OPEN 7', 'Proposed'] },
+  { k: 'school', l: 'School fleet back at', min: 0, max: 100, u: '%', tags: ['OPEN 8'] },
+  { k: 'emailDays', l: 'Fleet manager wrote within', min: 0, max: 30, u: ' days', tags: ['Test fix'] },
+  { k: 'renewDays', l: 'Renewal window', min: 30, max: 365, u: ' days', tags: ['OPEN 1c'] },
+  { k: 'underUse', l: 'Under-use line', min: 10, max: 90, u: '%', tags: ['OPEN 1c', 'OPEN 5c'] }
+];
+const FIXES = [
+  { k: 'email', l: 'Ask the owner if the fleet manager just wrote', s: 'Rule 9. Recovered Wexbridge, Oriel Valley, Cedar Hollow.' },
+  { k: 'rekey', l: 'Stitch re-keyed IDs', s: 'Rule 7, in Marcus\u2019s words. Recovered Redfern.' },
+  { k: 'school', l: 'Call a school fleet still short from Sep 7', s: 'Rule 5. Recovered Tallgrass.' },
+  { k: 'merger', l: 'A merger must cover the fall', s: 'Rule 6. Recovered Pinecrest.' }
+];
+const GUARDS = [
+  { k: 'incident', l: 'Throw out outage weeks', s: 'Found from P1 ticket clusters on 10+ accounts.' },
+  { k: 'blank', l: 'Blank is missing, not zero', s: 'Switch off to see what a naive agent does.' }
+];
+const tagHtml = t => `<span class="tag${/^OPEN/.test(t) ? ' open' : /fix/i.test(t) ? ' fix' : /Proposed/.test(t) ? ' prop' : ''}">${esc(t)}</span>`;
+function buildPolicy() {
+  $('#knobs').innerHTML = KNOBS.map(k => `<div class="knob"><label for="k_${k.k}">${k.l}</label><output id="o_${k.k}" for="k_${k.k}"></output>
+    <input type="range" id="k_${k.k}" data-k="${k.k}" min="${k.min}" max="${k.max}" step="1">
+    <div class="kmeta">default ${E.DEFAULT[k.k]}${k.u} ${k.tags.map(tagHtml).join('')}</div></div>`).join('');
+  const sw = (grp, list) => list.map(f => `<div class="sw-row"><button class="tog" role="switch" data-g="${grp}" data-k="${f.k}" aria-label="${esc(f.l)}"></button><span class="t"><b>${esc(f.l)}</b><span class="faint">${esc(f.s)}</span></span></div>`).join('');
+  $('#fixes').innerHTML = sw('fix', FIXES);
+  $('#guards').innerHTML = sw('guard', GUARDS);
+  $('#feeds').innerHTML = sw('feed', [{ k: 'email', l: 'Fleet-manager email dates', s: 'On: from the test file. Off: none, as on a live Monday (OPEN 6).' }]);
+  $('#knobs').addEventListener('input', e => { const k = e.target.dataset.k; if (!k) return; S.policy[k] = +e.target.value; policyChanged(); });
+  document.querySelectorAll('.tog').forEach(b => b.addEventListener('click', () => { const g = b.dataset.g, k = b.dataset.k; S.policy[g][k] = !S.policy[g][k]; policyChanged(); }));
+  document.querySelectorAll('[data-preset]').forEach(b => b.addEventListener('click', () => {
+    const on = b.dataset.preset === 'v3'; Object.keys(S.policy.fix).forEach(k => S.policy.fix[k] = on); policyChanged();
+    toast(on ? 'PRD v3 rules: the four fixes from the test are on.' : 'PRD v2 rules, as on the first run. Watch the score.');
+  }));
+  $('#resetPol').addEventListener('click', () => { S.policy = clone(E.DEFAULT); policyChanged(); toast('Policy reset to PRD v3.'); });
+  $('#copyPol').addEventListener('click', () => copyText(JSON.stringify(S.policy, null, 2), 'Policy copied as JSON.'));
+}
+function policyDiff() {
+  const d = [], P = S.policy, D = E.DEFAULT;
+  KNOBS.forEach(k => { if (P[k.k] !== D[k.k]) d.push(`${k.l.toLowerCase()} ${P[k.k]}${k.u}`); });
+  FIXES.forEach(f => { if (P.fix[f.k] !== D.fix[f.k]) d.push(`${f.s.split('.')[0]} fix off`); });
+  GUARDS.forEach(g => { if (P.guard[g.k] !== D.guard[g.k]) d.push(`${g.l.toLowerCase()}: off`); });
+  if (P.feed.email !== D.feed.email) d.push('no email-date feed');
+  return d;
+}
+function syncPolicyUI() {
+  KNOBS.forEach(k => { const i = $('#k_' + k.k), o = $('#o_' + k.k); i.value = S.policy[k.k]; o.textContent = S.policy[k.k] + k.u; o.classList.toggle('chg', S.policy[k.k] !== E.DEFAULT[k.k]); });
+  document.querySelectorAll('.tog').forEach(b => b.setAttribute('aria-checked', S.policy[b.dataset.g][b.dataset.k]));
+  const f = Object.values(S.policy.fix);
+  document.querySelector('[data-preset=v3]').setAttribute('aria-pressed', f.every(x => x));
+  document.querySelector('[data-preset=v1]').setAttribute('aria-pressed', f.every(x => !x));
+  const d = policyDiff();
+  $('#pdiff').innerHTML = d.length ? `<b>${d.length} change${d.length > 1 ? 's' : ''}</b> from PRD v3: ${esc(d.join(', '))}` : 'PRD v3 defaults. Open to change thresholds, rules and guardrails.';
+  const fl = [];
+  for (const set of ['test', 'stress', 'loaded']) for (const id of S.sets[set]) if (S.res[id].verdict !== S.def[id].verdict) fl.push(id);
+  const box = $('#flips');
+  if (!fl.length) { box.classList.add('hidden'); box.innerHTML = ''; }
+  else {
+    box.classList.remove('hidden');
+    box.innerHTML = `<span><b>${fl.length}</b> verdict${fl.length > 1 ? 's' : ''} changed from PRD v3 on the same inputs:</span>` + fl.slice(0, 14).map(id =>
+      `<button class="fl" data-id="${id}">${esc(S.items[id].name)}: <span class="c-${VC[S.def[id].verdict]}">${S.def[id].verdict}</span> to <b class="c-${VC[S.res[id].verdict]}">${S.res[id].verdict}</b></button>`).join('') + (fl.length > 14 ? `<span class="faint">and ${fl.length - 14} more</span>` : '');
+  }
+}
+function policyChanged() { recompute(false); renderAll(); }
+
+/* ---------------- score + source ---------------- */
+function renderScore() {
+  const ids = scored(); const ok = ids.filter(matches).length;
+  const dates = [...new Set(ids.map(id => S.items[id].decision))].sort();
+  const cells = dates.flatMap(d => ids.filter(id => S.items[id].decision === d)).map(id => {
+    const m = matches(id); return `<i class="b-${VC[S.res[id].verdict]}${m ? '' : ' x'}" title="${esc(S.items[id].name)}: ${S.res[id].verdict}${m ? '' : ' (differs from Marcus)'}"></i>`;
+  }).join('');
+  $('#score').innerHTML = `<span class="sv" style="color:${ok === ids.length ? 'var(--hit)' : ok >= 27 ? 'var(--ink)' : 'var(--call)'}">${ok}/${ids.length}</span>
+    <span class="sl">match Marcus\u2019s answers<br><span class="faint">first run 24, course bar 27</span></span><span class="strip" aria-hidden="true">${cells}</span>`;
+  const L = S.loaded, names = Object.values(L).map(x => x.file);
+  $('#srcline').innerHTML = names.length
+    ? `<b>Loaded:</b> ${names.map(esc).join(', ')}. <button class="btn sm" id="unload">Back to built-in inputs</button>`
+    : `<b>Built-in inputs.</b> The raw test files aren\u2019t in the packet, so each 12-week series is rebuilt from the scorecard. The original agent_v3.py reproduces all 30 recorded verdicts and reason lines on them. Load the real CSVs to replace them.`;
+  const u = $('#unload'); if (u) u.onclick = unload;
+}
+
+/* ---------------- queue ---------------- */
+function setIds() {
+  let ids = S.sets[S.set].slice();
+  if (S.q) { const q = S.q.toLowerCase(); ids = ids.filter(id => id.toLowerCase().includes(q) || S.items[id].name.toLowerCase().includes(q)); }
+  return ids;
+}
+function renderTabs() {
+  const tabs = [['test', 'Test set', S.sets.test.length], ['stress', 'Stress', S.sets.stress.length]];
+  if (S.sets.loaded.length) tabs.push(['loaded', 'Loaded', S.sets.loaded.length]);
+  $('#qtabs').innerHTML = tabs.map(([k, l, n]) => `<button role="tab" aria-selected="${S.set === k}" data-set="${k}">${l} <span class="faint">${n}</span></button>`).join('');
+}
+function renderQueue() {
+  renderTabs();
+  const all = setIds();
+  const cnt = { all: all.length }; all.forEach(id => { const v = S.res[id].verdict; cnt[v] = (cnt[v] || 0) + 1; });
+  const vfs = [['all', 'All'], ['call this week', 'Call'], ['ask Marcus', 'Marcus'], ['ask the owner', 'Owner'], ['ignore', 'Ignore']];
+  $('#vfilter').innerHTML = vfs.map(([k, l]) => `<button aria-pressed="${S.vf === k}" data-vf="${k}">${k !== 'all' ? `<span class="sw b-${VC[k]}"></span>` : ''}${l} <span class="faint">${cnt[k] || 0}</span></button>`).join('');
+  let ids = S.vf === 'all' ? all : all.filter(id => S.res[id].verdict === S.vf);
+  let html = '';
+  const row = id => {
+    const it = S.items[id], r = S.res[id], m = matches(id), h = S.human[id];
+    return `<li><button data-id="${id}" aria-current="${S.sel === id}"><span class="bar b-${VC[r.verdict]}"></span>
+      <span style="min-width:0"><span class="qn">${esc(it.name)}</span><span class="qi">${esc(it.id)}${S.edited.has(id) ? '<span class="ed">edited</span>' : ''}${h ? '<span class="ed">human</span>' : ''}</span></span>
+      <span class="qm ${m === null ? '' : m ? 'ok' : 'no'}" title="${m === null ? 'unscored' : m ? 'matches Marcus' : 'differs from Marcus'}">${m === null ? '' : m ? '\u2713' : '\u2717'}</span></button></li>`;
+  };
+  if (S.set === 'test') {
+    const dates = [...new Set(ids.map(id => S.items[id].decision))].sort();
+    dates.forEach(d => {
+      html += `<li class="qd">Decided as of ${fmtDate(d)}</li>`;
+      ids.filter(id => S.items[id].decision === d).sort((a, b) => S.items[a].name.localeCompare(S.items[b].name)).forEach(id => html += row(id));
+    });
+  } else if (S.set === 'loaded') {
+    ids.sort((a, b) => VORDER[S.res[a].verdict] - VORDER[S.res[b].verdict] || S.items[a].name.localeCompare(S.items[b].name)).forEach(id => html += row(id));
+  } else ids.forEach(id => html += row(id));
+  $('#qlist').innerHTML = html || `<li class="qd">No accounts match. Clear the search or the filter.</li>`;
+}
+
+/* ---------------- charts ---------------- */
+function chartV(it, r) {
+  const W = 640, H = 200, pl = 36, pr = 10, pt = 18, pb = 24, iw = W - pl - pr, ih = H - pt - pb;
+  const c = r.calc, xv = c.xv || [], tw = c.twin;
+  const raw = it.v.map(v => v == null ? null : +v);
+  const vals = [...raw.filter(v => v != null), ...(xv.filter(v => !isNaN(v))), +it.cv || 0];
+  const max = Math.max(10, ...vals) * 1.12;
+  const y = v => pt + ih - (v / max) * ih, bw = iw / 12, x = i => pl + i * bw;
+  const vc = VC[r.verdict];
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Active vehicles, 12 weeks"><defs><pattern id="hat" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="2.2" height="6" fill="var(--ink3)" opacity=".55"/></pattern></defs>`;
+  [0, .5, 1].forEach(f => { const v = Math.round(max / 1.12 * f); s += `<line x1="${pl}" x2="${W - pr}" y1="${y(v)}" y2="${y(v)}" stroke="var(--rule)" stroke-width="1"/><text x="${pl - 6}" y="${y(v) + 4}" font-size="11" text-anchor="end" fill="var(--ink3)">${v}</text>`; });
+  for (let i = 0; i < 12; i++) {
+    const ex = c.excluded[i];
+    const fromTwin = tw && tw.role === 'old' && !isNaN(tw.ov[i]);
+    const v = ex === 'outage' ? raw[i] : (ex === 'blank' ? null : (isNaN(xv[i]) ? raw[i] : xv[i]));
+    const bx = x(i) + bw * .16, bwi = bw * .68;
+    if (ex === 'outage') {
+      s += `<rect x="${bx}" y="${y(v || 0)}" width="${bwi}" height="${y(0) - y(v || 0)}" fill="url(#hat)"/><text x="${bx + bwi / 2}" y="${pt + 10}" font-size="10.5" text-anchor="middle" fill="var(--ink2)">outage</text>`;
+    } else if (ex === 'blank') {
+      s += `<rect x="${bx}" y="${y(0) - 26}" width="${bwi}" height="26" fill="none" stroke="var(--ink3)" stroke-dasharray="3 3"/><text x="${bx + bwi / 2}" y="${y(0) - 32}" font-size="10.5" text-anchor="middle" fill="var(--ink2)">blank</text>`;
+    } else if (v != null && !isNaN(v)) {
+      const fill = ex === 'zeroed' ? 'var(--call)' : fromTwin ? 'var(--owner)' : 'var(--ink)';
+      s += `<rect x="${bx}" y="${y(v)}" width="${bwi}" height="${Math.max(0, y(0) - y(v))}" fill="${fill}" opacity="${fromTwin ? .55 : .82}"><title>${c.WK[i]}: ${v}</title></rect>`;
+      if (ex === 'zeroed') s += `<text x="${bx + bwi / 2}" y="${y(0) - 6}" font-size="10" text-anchor="middle" fill="var(--call)">read as 0</text>`;
+    }
+    if (i % 2 === 0 || bw > 50) s += `<text x="${x(i) + bw / 2}" y="${H - 6}" font-size="11" text-anchor="middle" fill="var(--ink3)">${E.mon(E.dn(c.WK[i]))}</text>`;
+  }
+  const thr = it.fleet === 'school bus' ? [S.policy.school, 'back at'] : (r.rule === 11 || it.fleet === 'snowplow') ? [S.policy.underUse, 'under-use'] : null;
+  if (thr && +it.cv) { const ty = y(+it.cv * thr[0] / 100); s += `<line x1="${pl}" x2="${W - pr}" y1="${ty}" y2="${ty}" stroke="var(--marcus)" stroke-dasharray="2 3"/><text x="${pl + 4}" y="${ty - 5}" font-size="11" fill="var(--marcus)">${thr[1]} ${thr[0]}%</text>`; }
+  if (+it.cv) s += `<line x1="${pl}" x2="${W - pr}" y1="${y(+it.cv)}" y2="${y(+it.cv)}" stroke="var(--ink2)" stroke-dasharray="5 4"/><text x="${W - pr}" y="${y(+it.cv) - 5}" font-size="11" text-anchor="end" fill="var(--ink2)">contracted ${it.cv}</text>`;
+  if (c.v && c.v.fi) {
+    const seg = (idx, val, col, lab, anchorEnd) => {
+      const x1 = x(idx[0]) + 2, x2 = x(idx[idx.length - 1]) + bw - 2;
+      return `<line x1="${x1}" x2="${x2}" y1="${y(val)}" y2="${y(val)}" stroke="${col}" stroke-width="2.5"/><text x="${anchorEnd ? x2 : x1}" y="${y(val) - 7}" font-size="12.5" font-weight="800" text-anchor="${anchorEnd ? 'end' : 'start'}" fill="${col}">${lab}</text>`;
+    };
+    const past = c.cv !== null && c.cv < -S.policy.drop / 100;
+    s += seg(c.v.fi, c.v.first, 'var(--ink2)', 'first 3: ' + E.fix0(c.v.first), false);
+    s += seg(c.v.li, c.v.last, past ? `var(--${vc === 'ignore' ? 'ink' : vc})` : 'var(--ink2)', 'last 3: ' + E.fix0(c.v.last), true);
+  }
+  return s + '</svg>';
+}
+function chartL(it, r) {
+  const W = 640, H = 96, pl = 36, pr = 10, pt = 12, pb = 10, iw = W - pl - pr, ih = H - pt - pb;
+  const c = r.calc, xl = c.xl || [];
+  const vals = xl.filter(v => !isNaN(v)); const max = Math.max(10, ...vals, ...it.l.filter(v => v != null)) * 1.15;
+  const bw = iw / 12, x = i => pl + i * bw + bw / 2, y = v => pt + ih - (v / max) * ih;
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Logins, 12 weeks"><line x1="${pl}" x2="${W - pr}" y1="${y(0)}" y2="${y(0)}" stroke="var(--rule)"/>`;
+  let path = '', pen = false;
+  for (let i = 0; i < 12; i++) {
+    const v = xl[i];
+    if (isNaN(v)) { pen = false; if (c.excluded[i]) s += `<text x="${x(i)}" y="${y(0) - 4}" font-size="10" text-anchor="middle" fill="var(--ink3)">${c.excluded[i] === 'outage' ? 'out' : '\u2013'}</text>`; continue; }
+    path += (pen ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1) + ' '; pen = true;
+    s += `<circle cx="${x(i)}" cy="${y(v)}" r="2.6" fill="var(--ink)"><title>${c.WK[i]}: ${v} logins</title></circle>`;
+  }
+  s += `<path d="${path}" fill="none" stroke="var(--ink)" stroke-width="1.6"/>`;
+  s += `<text x="${pl - 6}" y="${y(max / 1.15) + 4}" font-size="11" text-anchor="end" fill="var(--ink3)">${Math.round(max / 1.15)}</text>`;
+  return s + '</svg>';
+}
+
+/* ---------------- account panel ---------------- */
+const FLEETS = ['trucking', 'city fleet', 'city fleet, incl. plows', 'contractor', 'utility', 'school bus', 'snowplow'];
+function deltaTxt(c) { if (c === null || c === undefined) return '\u2014'; const p = E.fix0(Math.abs(c) * 100); return (c < 0 ? '\u2212' : '+') + p + '%'; }
+function renderAccount() {
+  const id = S.sel, it = S.items[id], r = S.res[id];
+  if (!it) { $('#acctBody').innerHTML = '<p class="muted">Pick an account from the list.</p>'; return; }
+  const c = r.calc;
+  const dlTxt = c.deadline ? `${fmtDate(c.deadline)}<span class="d">${c.daysToDeadline >= 0 ? 'in ' + c.daysToDeadline + (c.daysToDeadline === 1 ? ' day' : ' days') : 'passed ' + (-c.daysToDeadline) + (c.daysToDeadline === -1 ? ' day' : ' days') + ' ago'}</span>` : '\u2014';
+  const tks = (it.tickets || []).filter(t => E.dn(t.opened) <= E.dn(it.decision));
+  const emailDays = it.email ? E.dn(it.decision) - E.dn(it.email) : null;
+  const kv = [
+    ['Fleet type', esc(it.fleet || '\u2014')],
+    ['Contracted vehicles', esc(it.cv)],
+    ['Annual value', fmtMoney(it.value)],
+    ['Renews', fmtDate(it.renewal)],
+    ['Notice deadline', dlTxt, c.daysToDeadline !== null && c.daysToDeadline <= 14],
+    ['Parent account', esc(it.parent || 'none')],
+    ['Fleet manager last wrote', it.email ? `${short(it.email)}<span class="d">${emailDays} days before${S.policy.feed.email ? '' : ', hidden: no live feed'}</span>` : 'no date on file'],
+    ['Tickets', tks.length ? tks.map(t => `${short(t.opened)}<span class="d">${esc(t.subject)}</span>`).join('') : 'none open']
+  ];
+  const used = c.excluded.filter(e => !e).length;
+  const hc = r.verdict === 'ignore' ? 'var(--ink)' : `var(--${VC[r.verdict]})`;
+  let panels = '';
+  if (r.calc.merger) {
+    const m = r.calc.merger, cov = Math.min(1, m.cover);
+    panels += `<div class="panel"><h4>Merger check under ${esc(m.parent)}</h4>
+      <div>${esc(it.name)}: ${E.fix0(m.own.first)} \u2192 ${E.fix0(m.own.last)}, <b>fell ${E.fix0(m.fall)}</b></div>
+      ${m.sib.map(s => `<div>${esc(s.name)} <span class="faint">${s.id}</span>: ${E.fix0(s.first)} \u2192 ${E.fix0(s.last)}, <b>rose ${E.fix0(Math.max(0, s.last - s.first))}</b></div>`).join('')}
+      <div class="cover" aria-hidden="true"><i style="width:${cov * 100}%"></i><em style="left:${S.policy.merge}%"></em></div>
+      <div class="tiny muted">Siblings cover <b style="color:var(--ink)">${E.fix0(m.cover * 100)}%</b> of the fall. The line is ${S.policy.merge}% (red mark).</div></div>`;
+  } else if (r.calc.group) {
+    const g = r.calc.group;
+    panels += `<div class="panel"><h4>Group check under ${esc(g.parent)}</h4><div>${g.members.map(m => esc(m.name)).join(' + ')}: group total ${g.c === null ? 'has gaps' : (g.c < 0 ? 'down ' : 'up ') + E.pct(g.c)}.</div></div>`;
+  }
+  if (r.calc.twin) {
+    const t = r.calc.twin;
+    panels += `<div class="panel"><h4>Re-keyed ID found</h4><div>${t.role === 'old' ? `This ID reads 0 from the week of ${short(t.from)}, the week <b>${t.id}</b> (same name) starts reporting. Blue bars come from ${t.id}.` : `This ID starts the week ${t.id} (same name) goes to 0. Earlier weeks come from ${t.id}.`}</div></div>`;
+  }
+  if (c.excluded.includes('outage')) panels += `<div class="panel tiny"><b>Outage week thrown out.</b> 60 P1 tickets on 60 accounts tied to one platform incident mark the week of Mar 9 for every account.</div>`;
+  if (c.excluded.includes('zeroed')) panels += `<div class="panel tiny" style="border-color:var(--call)"><b style="color:var(--call)">Guardrail off:</b> blank weeks are being read as zero, so a feed failure looks like a collapse.</div>`;
+
+  $('#acctBody').innerHTML = `
+    <div class="ahead"><div><h3>${esc(it.name)}</h3><div class="ai">${esc(it.id)}, owner ${esc(it.owner || 'unknown')}, decided as of ${fmtDate(it.decision)}</div></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">${S.edited.has(id) ? '<button class="btn sm" id="resetAcct">Reset inputs</button>' : ''}<button class="btn sm" id="editBtn" aria-pressed="${S.editing}">${S.editing ? 'Done editing' : 'Edit inputs'}</button></div></div>
+    ${it.tests ? `<p class="atests">Tests: <b>${esc(it.tests)}</b>${it.set === 'stress' ? ' <span class="tag">synthetic, unscored</span>' : ''}</p>` : '<p class="atests"></p>'}
+    <dl class="kv">${kv.map(([k, v, a]) => `<div><dt>${k}</dt><dd${a ? ' class="alert"' : ''}>${v}</dd></div>`).join('')}</dl>
+    <div class="chartbox"><div class="ct"><b>Active vehicles</b><span class="faint tiny">12 weeks to the decision date</span></div>${chartV(it, r)}</div>
+    <div class="chartbox"><div class="ct"><b>Logins</b></div>${chartL(it, r)}</div>
+    <div class="calc">
+      <div><div class="cn" style="color:${[6, 9].includes(r.rule) && c.cv !== null && c.cv < -S.policy.drop / 100 ? hc : 'var(--ink)'}">${deltaTxt(c.cv)}</div><div class="cl">vehicles vs own level</div></div>
+      <div><div class="cn" style="color:${r.rule === 10 ? hc : 'var(--ink)'}">${deltaTxt(c.cl)}</div><div class="cl">logins vs own level</div></div>
+      <div><div class="cn" style="color:${[4, 5, 11].includes(r.rule) && r.verdict !== 'ignore' ? hc : 'var(--ink)'}">${c.u === null || c.u === undefined || !isFinite(c.u) ? '\u2014' : E.fix0(c.u * 100) + '%'}</div><div class="cl">of contracted vehicles</div></div>
+      <div><div class="cn">${used}<span class="faint" style="font-weight:400;font-size:16px"> of 12</span></div><div class="cl">weeks used</div></div>
+    </div>
+    ${panels}
+    ${S.editing ? editForm(it) : ''}`;
+  $('#editBtn').onclick = () => { S.editing = !S.editing; renderAccount(); };
+  const ra = $('#resetAcct'); if (ra) ra.onclick = () => { S.items[id] = clone(S.base[id]); S.edited.delete(id); syncDayOne(S.items[id]); recompute(true); renderAll(); toast('Inputs reset for ' + it.name + '.'); };
+  if (S.editing) wireEdit(it);
+}
+function editForm(it) {
+  const wk = Array.from({ length: 12 }, (_, i) => E.mon(E.dn(it.w1) + 7 * i));
+  const cell = (k, i) => `<td><input inputmode="numeric" data-arr="${k}" data-i="${i}" value="${it[k][i] == null ? '' : it[k][i]}" aria-label="${k === 'v' ? 'vehicles' : 'logins'} ${wk[i]}"></td>`;
+  const hasT = s => (it.tickets || []).find(t => t.subject === s);
+  const FULL = 'Request full export of all work orders and vehicle records', ADMIN = 'Change account admin contact';
+  return `<div class="edit"><h4>Edit inputs <span class="faint" style="font-weight:400">every change re-runs the agent; leave a week empty for blank</span></h4>
+    <table class="wk"><thead><tr><th></th>${wk.map(w => `<th>${w}</th>`).join('')}</tr></thead>
+    <tbody><tr><th>Vehicles</th>${it.v.map((_, i) => cell('v', i)).join('')}</tr><tr><th>Logins</th>${it.l.map((_, i) => cell('l', i)).join('')}</tr></tbody></table>
+    <div class="ctxf">
+      <label>Fleet type<select data-f="fleet">${FLEETS.concat(FLEETS.includes(it.fleet) || !it.fleet ? [] : [it.fleet]).map(f => `<option${f === it.fleet ? ' selected' : ''}>${f}</option>`).join('')}</select></label>
+      <label>Contracted vehicles<input data-f="cv" inputmode="numeric" value="${esc(it.cv)}"></label>
+      <label>Annual value ($)<input data-f="value" inputmode="numeric" value="${esc(it.value ?? '')}"></label>
+      <label>Renewal date<input type="date" data-f="renewal" value="${esc(it.renewal || '')}"></label>
+      <label>Fleet manager last wrote<input type="date" data-f="email" value="${esc(it.email || '')}"></label>
+      <label>Status<select data-f="status"><option${it.status !== 'Notice given' ? ' selected' : ''}>Active</option><option${it.status === 'Notice given' ? ' selected' : ''}>Notice given</option></select></label>
+      <label>Notice given on<input type="date" data-f="notice" value="${esc(it.notice || '')}"></label>
+      <label class="chk"><input type="checkbox" data-t="${FULL}"${hasT(FULL) ? ' checked' : ''}> Full-export ticket</label>
+      <label class="chk"><input type="checkbox" data-t="${ADMIN}"${hasT(ADMIN) ? ' checked' : ''}> Admin-contact ticket</label>
+    </div></div>`;
+}
+function wireEdit(it) {
+  const id = it.id, box = document.querySelector('.edit');
+  const changed = () => { S.edited.add(id); syncDayOne(it); recompute(true); renderQueue(); renderDecision(); renderScore(); syncPolicyUI(); refreshAccountView(); };
+  box.querySelectorAll('[data-arr]').forEach(inp => inp.addEventListener('change', () => {
+    const v = inp.value.trim(); it[inp.dataset.arr][+inp.dataset.i] = v === '' ? null : (isNaN(+v) ? null : +v); changed();
+  }));
+  box.querySelectorAll('[data-f]').forEach(inp => inp.addEventListener('change', () => {
+    const f = inp.dataset.f, v = inp.value.trim();
+    it[f] = ['cv', 'value'].includes(f) ? (v === '' ? null : +v) : (v === '' ? null : v);
+    if (f === 'status' && v === 'Notice given' && !it.notice) it.notice = it.decision;
+    changed();
+  }));
+  box.querySelectorAll('[data-t]').forEach(inp => inp.addEventListener('change', () => {
+    const s = inp.dataset.t; it.tickets = (it.tickets || []).filter(t => t.subject !== s);
+    if (inp.checked) it.tickets.push({ opened: E.iso(E.dn(it.decision) - 10), priority: 'P2', subject: s });
+    changed();
+  }));
+}
+function syncDayOne(it) {
+  const env = envFor(it); if (!env || !env.dayOne) return;
+  const row = env.dayOne[it.id]; if (row && it.w1 === env.dayOneW1) { row.v = it.v.slice(); row.l = it.l.slice(); row.cv = it.cv; }
+}
+function refreshAccountView() {
+  // re-render charts and numbers without losing focus in the edit form
+  const focused = document.activeElement && document.activeElement.closest('.edit') ? { a: document.activeElement.dataset.arr, i: document.activeElement.dataset.i, f: document.activeElement.dataset.f } : null;
+  renderAccount();
+  if (focused) {
+    const sel = focused.a ? `[data-arr="${focused.a}"][data-i="${focused.i}"]` : focused.f ? `[data-f="${focused.f}"]` : null;
+    const el = sel && document.querySelector('.edit ' + sel); if (el) el.focus();
+  }
+}
+
+/* ---------------- decision panel ---------------- */
+function routeTo(it, r) {
+  if (r.verdict === 'ignore') return 'nobody';
+  if (r.verdict === 'ask Marcus') return 'Marcus Bell';
+  if (r.verdict === 'ask the owner') return esc(it.owner);
+  return esc(it.owner) + (r.top || +it.value > 75000 ? ' and Marcus, same week' : '');
+}
+function renderDecision() {
+  const id = S.sel, it = S.items[id], r = S.res[id];
+  if (!it) { $('#dec').innerHTML = ''; return; }
+  const vc = VC[r.verdict], rule = E.RULES[r.rule - 1], m = matches(id), h = S.human[id];
+  const nb = r.calc.excluded.map((e, i) => e ? `${short(r.calc.WK[i])} ${e === 'zeroed' ? 'blank read as 0' : e}` : null).filter(Boolean);
+  const pre = `Weeks thrown out: ${nb.length ? nb.join(', ') : 'none'}.` + (r.calc.v ? ` Own level: first 3 weeks ${E.fix0(r.calc.v.first)}, last 3 weeks ${E.fix0(r.calc.v.last)}.` : '');
+  const tr = r.trace.map(t => {
+    const R = E.RULES[t.n - 1], open = S.open[t.n];
+    const ic = t.status === 'fire' ? `<span class="sw b-${vc}" style="margin-top:3px"></span>` : t.status === 'pass' ? '\u2013' : t.status === 'apply' ? '<span class="sw" style="margin-top:3px;background:var(--owner);opacity:.55"></span>' : '';
+    return `<li class="${t.status}${open ? ' open' : ''}"><button data-rule="${t.n}" aria-expanded="${!!open}"><span class="rn">${t.n}</span>
+      <span class="rt">${esc(R.name)}${t.text ? `<span class="rd">${esc(t.text)}</span>` : (t.status === 'skip' ? '<span class="rd">not reached</span>' : '')}</span><span class="ic">${ic}</span></button>
+      <div class="more">${esc(R.why)}<div class="tags">${R.src.map(tagHtml).join('')}</div></div></li>`;
+  }).join('');
+  $('#dec').innerHTML = `
+    <h4 class="faint" style="font-weight:600">Agent\u2019s verdict</h4>
+    <div class="vbig c-${vc}"><span class="sw b-${vc}"></span>${r.verdict}</div>
+    <p class="reason">${esc(r.reason)}</p>
+    <dl class="route"><dt>Goes to</dt><dd>${routeTo(it, r)}</dd><dt>Decided by</dt><dd>Rule ${r.rule}: ${esc(rule.name)}</dd><dt>Source</dt><dd><span class="tags">${rule.src.map(tagHtml).join('')}</span></dd></dl>
+    ${it.marcus ? `<div class="record"><div class="rh"><span>Marcus\u2019s answer of record: <b>${esc(it.marcus.answer)}</b></span><span class="match ${m ? 'ok' : 'no'}">${m ? 'match' : 'differs'}</span></div>
+      <p class="why">\u201c${esc(it.marcus.why)}\u201d</p>
+      <div class="v1">First run (PRD v2): <b class="c-${VC[it.v1.verdict]}">${esc(it.v1.verdict)}</b>, ${it.v1.result === 'Hit' ? 'hit' : `<b>miss</b>${it.v1.cause ? ': ' + esc(it.v1.cause.toLowerCase()) : ''}`}</div></div>`
+      : `<div class="record"><div class="rh"><span>No answer of record for this account.</span><span class="match na">unscored</span></div>${it.set === 'stress' ? '<p class="why">A synthetic case built to show a rule the test set never reaches.</p>' : ''}</div>`}
+    <div class="trace"><h4>Decision trace <span>first rule that fits decides</span></h4><p class="pre">${esc(pre)}</p><ol class="tr">${tr}</ol></div>
+    <div class="human"><h4>Record a human decision</h4>
+      <div class="row"><select id="hv" aria-label="Human verdict"><option value="">Keep the agent\u2019s verdict</option>${Object.keys(VC).map(v => `<option${h && h.verdict === v ? ' selected' : ''}>${v}</option>`).join('')}</select>
+      <input id="hn" placeholder="Why (goes in the audit log)" value="${h ? esc(h.note) : ''}" aria-label="Note"><button class="btn sm" id="hsave">Record</button></div>
+      ${h ? `<div class="done">Recorded <b>${esc(h.verdict)}</b>${h.note ? ': ' + esc(h.note) : ''}. The agent\u2019s verdict stays in the log beside it.</div>` : ''}
+      <div style="margin-top:10px"><button class="btn sm" id="copyRec">Copy decision record</button></div></div>`;
+  $('#dec').querySelectorAll('[data-rule]').forEach(b => b.onclick = () => { const n = +b.dataset.rule; S.open[n] = !S.open[n]; renderDecision(); const nb2 = $(`#dec [data-rule="${n}"]`); if (nb2) nb2.focus(); });
+  $('#hsave').onclick = () => {
+    const v = $('#hv').value, n = $('#hn').value.trim();
+    if (!v) { delete S.human[id]; toast('Human decision cleared.'); }
+    else { S.human[id] = { verdict: v, note: n, at: new Date().toISOString() }; toast('Recorded: ' + v + '. It goes in the audit log next to the agent\u2019s verdict.'); }
+    renderQueue(); renderDecision();
+  };
+  $('#copyRec').onclick = () => copyText(recordText(id), 'Decision record copied.');
+}
+function recordText(id) {
+  const it = S.items[id], r = S.res[id], h = S.human[id], d = policyDiff();
+  return [`${it.id} ${it.name}, decided as of ${it.decision}`, `Verdict: ${r.verdict}`, `Reason: ${r.reason}`, `Rule: ${r.rule} ${r.ruleName}`,
+    it.marcus ? `Marcus, answer of record: ${it.marcus.answer} (${matches(id) ? 'match' : 'differs'})` : 'Marcus: no answer of record',
+    h ? `Human decision: ${h.verdict}${h.note ? ' (' + h.note + ')' : ''} at ${h.at}` : 'Human decision: none',
+    'Trace:', ...r.trace.filter(t => t.status !== 'skip').map(t => `  ${t.n} ${E.RULES[t.n - 1].name}: ${t.status === 'fire' ? 'DECIDED' : t.status === 'apply' ? 'stitched' : 'did not fit'}; ${t.text}`),
+    `Policy: ${d.length ? d.join('; ') : 'PRD v3 defaults'}`, `Inputs edited: ${S.edited.has(id) ? 'yes' : 'no'}`].join('\n');
+}
+
+/* ---------------- Monday list ---------------- */
+function renderList() {
+  let ids = setIds();
+  const dates = [...new Set(ids.map(id => S.items[id].decision))].sort();
+  if (S.dateF !== 'all' && dates.includes(S.dateF)) ids = ids.filter(id => S.items[id].decision === S.dateF);
+  const cnt = {}; ids.forEach(id => { const v = S.res[id].verdict; cnt[v] = (cnt[v] || 0) + 1; });
+  const groups = ['call this week', 'ask Marcus', 'ask the owner', 'ignore'];
+  let rows = '';
+  groups.forEach(g => {
+    let gi = ids.filter(id => S.res[id].verdict === g);
+    if (!gi.length) return;
+    gi.sort((a, b) => (S.res[b].top ? 1 : 0) - (S.res[a].top ? 1 : 0) || (S.res[a].calc.daysToDeadline ?? 9e9) - (S.res[b].calc.daysToDeadline ?? 9e9));
+    const hide = g === 'ignore' && !S.showIgnored;
+    rows += `<tr class="gh"><td colspan="4"><span class="vd c-${VC[g]}"><span class="sw b-${VC[g]}"></span>${g} <span class="faint">${gi.length}</span></span>${g === 'ignore' ? ` <button class="btn sm" id="togIgn" style="margin-left:8px">${hide ? 'Show' : 'Hide'}</button>` : ''}</td></tr>`;
+    if (!hide) gi.forEach(id => {
+      const it = S.items[id], r = S.res[id], dd = r.calc.daysToDeadline;
+      rows += `<tr class="rowlink" data-id="${id}" tabindex="0"><td><div class="nm">${esc(it.name)}</div><div class="tiny faint">${esc(it.id)}</div></td><td>${esc(r.reason)}</td><td>${esc(it.owner || '\u2014')}</td><td>${r.calc.deadline ? short(r.calc.deadline) + `<div class="tiny ${dd !== null && dd < 0 ? 'c-call' : 'faint'}">${dd === null ? '' : dd >= 0 ? 'in ' + dd + (dd === 1 ? ' day' : ' days') : 'passed'}</div>` : '\u2014'}</td></tr>`;
+    });
+  });
+  const total = ids.length || 1;
+  $('#listBody').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap"><h3 style="margin:0">${ids.length} accounts, ${ids.length - (cnt.ignore || 0)} need a person</h3>
+    ${dates.length > 1 ? `<div class="vf">${['all', ...dates].map(d => `<button data-date="${d}" aria-pressed="${S.dateF === d}">${d === 'all' ? 'All dates' : short(d)}</button>`).join('')}</div>` : ''}</div>
+    <div class="mix">${groups.map(g => cnt[g] ? `<i class="b-${VC[g]}" style="width:${cnt[g] / total * 100}%" title="${g}: ${cnt[g]}"></i>` : '').join('')}</div>
+    <p class="tiny muted" style="margin-top:-6px">Calls first, export requests at the top, then by nearest notice deadline. Click a row for its trace.</p>
+    <div class="mwrap"><table class="mlist"><thead><tr><th>Account</th><th>Reason</th><th>Owner</th><th>Deadline</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  const ti = $('#togIgn'); if (ti) ti.onclick = () => { S.showIgnored = !S.showIgnored; renderList(); };
+  $('#listBody').querySelectorAll('[data-date]').forEach(b => b.onclick = () => { S.dateF = b.dataset.date; renderList(); });
+  $('#listBody').querySelectorAll('tr.rowlink').forEach(tr => {
+    const go = () => { S.sel = tr.dataset.id; setView('acct'); renderAll(); };
+    tr.onclick = go; tr.onkeydown = e => { if (e.key === 'Enter') go(); };
+  });
+}
+function setView(v) {
+  S.view = v; $('#vAcct').setAttribute('aria-pressed', v === 'acct'); $('#vList').setAttribute('aria-pressed', v === 'list');
+  $('#acctBody').classList.toggle('hidden', v !== 'acct'); $('#listBody').classList.toggle('hidden', v !== 'list');
+}
+
+function renderAll() {
+  renderScore(); syncPolicyUI(); renderQueue();
+  if (S.view === 'acct') renderAccount(); else renderList();
+  renderDecision();
+}
+
+/* ---------------- console events ---------------- */
+$('#qtabs').addEventListener('click', e => {
+  const b = e.target.closest('[data-set]'); if (!b) return;
+  S.set = b.dataset.set; S.vf = 'all'; S.dateF = 'all';
+  if (!S.sets[S.set].includes(S.sel)) S.sel = S.set === 'test' ? 'LKS-1024' : S.sets[S.set][0];
+  S.editing = false; renderAll();
+});
+$('#vfilter').addEventListener('click', e => { const b = e.target.closest('[data-vf]'); if (!b) return; S.vf = b.dataset.vf; renderQueue(); if (S.view === 'list') renderList(); });
+$('#qsearch').addEventListener('input', e => { S.q = e.target.value.trim(); renderQueue(); if (S.view === 'list') renderList(); });
+$('#qlist').addEventListener('click', e => { const b = e.target.closest('[data-id]'); if (!b) return; S.sel = b.dataset.id; S.editing = false; setView('acct'); renderAll(); });
+$('#flips').addEventListener('click', e => { const b = e.target.closest('[data-id]'); if (!b) return; S.sel = b.dataset.id; S.set = S.items[S.sel].set; setView('acct'); renderAll(); });
+$('#vAcct').onclick = () => { setView('acct'); renderAll(); };
+$('#vList').onclick = () => { setView('list'); renderAll(); };
+$('#runMonday').onclick = () => {
+  const ms = recompute(false); renderAll();
+  const btns = [...document.querySelectorAll('#qlist button')];
+  const n = S.sets[S.set].length, done = () => { setView('list'); renderAll(); toast(`Ran ${n} accounts through 13 rules in ${ms < 1 ? 'under 1' : Math.round(ms)} ms.`); };
+  if (reduce || !btns.length) return done();
+  btns.forEach(b => { b.querySelector('.bar').style.opacity = '.15'; b.querySelector('.qm').style.visibility = 'hidden'; });
+  const steps = Math.min(btns.length, 30), per = Math.ceil(btns.length / steps); let k = 0;
+  const tick = () => {
+    btns.slice(k * per, (k + 1) * per).forEach(b => { b.querySelector('.bar').style.opacity = ''; b.querySelector('.qm').style.visibility = ''; });
+    k++; if (k < steps) setTimeout(tick, 32); else setTimeout(done, 200);
+  };
+  tick();
+};
+$('#exportBtn').onclick = () => {
+  const cols = ['item_id', 'name', 'decision_date', 'verdict', 'reason', 'rule', 'rule_name', 'goes_to', 'marcus_answer', 'matches_marcus', 'human_verdict', 'human_note', 'inputs_edited', 'policy'];
+  const q = v => { const s = String(v == null ? '' : v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+  const pol = policyDiff().join('; ') || 'PRD v3 defaults';
+  const lines = [cols.join(',')];
+  S.sets[S.set].forEach(id => {
+    const it = S.items[id], r = S.res[id], h = S.human[id] || {};
+    lines.push([it.id, it.name, it.decision, r.verdict, r.reason, r.rule, r.ruleName, routeTo(it, r).replace(/&amp;/g, '&'), it.marcus ? it.marcus.answer : '', it.marcus ? (matches(id) ? 'yes' : 'no') : '', h.verdict || '', h.note || '', S.edited.has(id) ? 'yes' : 'no', pol].map(q).join(','));
+  });
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `larkspur_audit_${S.set}_${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(a); a.click(); a.remove(); toast(`Audit log: ${S.sets[S.set].length} rows, with the policy used.`);
+};
+function copyText(t, msg) {
+  const fallback = () => { const ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); toast(msg); } catch (e) { toast('Copy is blocked here. Select the text manually.'); } ta.remove(); };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(() => toast(msg), fallback); else fallback();
+}
+
+/* ---------------- loading real CSVs ---------------- */
+function parseCSV(text) {
+  const rows = []; let row = [], f = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (q) { if (ch === '"') { if (text[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += ch; }
+    else if (ch === '"') q = true;
+    else if (ch === ',') { row.push(f); f = ''; }
+    else if (ch === '\n' || ch === '\r') { if (ch === '\r' && text[i + 1] === '\n') i++; row.push(f); rows.push(row); row = []; f = ''; }
+    else f += ch;
+  }
+  if (f !== '' || row.length) { row.push(f); rows.push(row); }
+  const h = rows.findIndex(r => r.map(c => c.trim().toLowerCase()).includes('account_id'));
+  if (h < 0) return null;
+  const head = rows[h].map(c => c.trim().toLowerCase());
+  return { head, banner: rows.slice(0, h).map(r => r.join(',')).join(' '), rows: rows.slice(h + 1).filter(r => r.length > 1 && (r[head.indexOf('account_id')] || '').trim()).map(r => Object.fromEntries(head.map((k, i) => [k, (r[i] || '').trim()]))) };
+}
+const pNum = s => { if (s == null || s === '') return null; const v = Number(String(s).replace(/[$,\s]/g, '')); return isNaN(v) ? null : v; };
+function pDate(s) {
+  if (!s) return null; s = String(s).trim();
+  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/); if (m) return `${m[1]}-${m[2].padStart(2, '0')}-${m[3].padStart(2, '0')}`;
+  m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/); if (m) { const y = m[3].length === 2 ? '20' + m[3] : m[3]; return `${y}-${m[1].padStart(2, '0')}-${m[2].padStart(2, '0')}`; }
+  const d = new Date(s); return isNaN(d) ? null : d.toISOString().slice(0, 10);
+}
+const W12 = p => Array.from({ length: 12 }, (_, i) => p + (i + 1));
+function kind(p) {
+  const h = p.head;
+  if (h.includes('active_vehicles_w1') && h.includes('decision_date')) return 'screen';
+  if (h.includes('active_vehicles_w1')) return 'usage';
+  if (h.includes('last_email_from_fleet_manager')) return 'context';
+  if (h.includes('subject') && h.includes('priority')) return 'tickets';
+  if (h.includes('owner')) return 'sf';
+  return null;
+}
+$('#loadBtn').onclick = () => $('#fileIn').click();
+$('#fileIn').addEventListener('change', async e => {
+  const files = [...e.target.files]; if (!files.length) return;
+  const got = [];
+  for (const f of files) {
+    const p = parseCSV(await f.text()); const k = p && kind(p);
+    if (!k) { toast(`${f.name}: no account_id column found. Expected the usage export, Salesforce, tickets, or the Door 3 files.`); continue; }
+    if (k === 'usage') {
+      const m = f.name.match(/(\d{4}-\d{2}-\d{2})/) || p.banner.match(/(\d{4}-\d{2}-\d{2})/);
+      p.date = m ? m[1] : '2026-10-12';
+      p.rows = p.rows.filter(r => /^LKS/.test(r.account_id));
+    }
+    p.file = f.name; S.loaded[k] = p; got.push(`${f.name} (${p.rows.length} rows)`);
+  }
+  e.target.value = '';
+  if (got.length) { applyLoaded(); toast('Loaded ' + got.join(', ') + '.'); }
+});
+function applyLoaded() {
+  const L = S.loaded;
+  // reset to built-ins, then overlay
+  S.items = {}; S.sets = { test: [], stress: [], loaded: [] }; S.edited.clear();
+  DATA.items.forEach(it => { S.items[it.id] = clone(it); S.sets[it.set].push(it.id); });
+  const sfById = {}, sfByName = {}, sfParent = { ...DATA.sfParent };
+  if (L.sf) { Object.keys(sfParent).forEach(k => delete sfParent[k]); L.sf.rows.forEach(r => { sfById[r.account_id] = r; sfByName[r.account_name] = r; if (r.parent_account) sfParent[r.account_name] = r.parent_account; }); }
+  const tk = {}; let incidents = DATA.incidents;
+  if (L.tickets) {
+    const inc = {};
+    L.tickets.rows.forEach(t => {
+      (tk[t.account_id] = tk[t.account_id] || []).push({ opened: pDate(t.opened), priority: t.priority, subject: t.subject });
+      const m = (t.resolution || '').match(/(INC-[\d-]+)/);
+      if (t.priority === 'P1' && m) { const g = inc[m[1]] = inc[m[1]] || { acc: new Set(), first: null }; g.acc.add(t.account_id); const d = pDate(t.opened); if (d && (!g.first || d < g.first)) g.first = d; }
+    });
+    incidents = Object.entries(inc).filter(([, g]) => g.first).map(([id, g]) => { const n = E.dn(g.first), wd = (new Date(n * 864e5).getUTCDay() + 6) % 7; return { week: E.iso(n - wd), accounts: g.acc.size, label: id }; });
+  }
+  const sfFor = (id, name) => sfById[id] || sfByName[name] || null;
+  const fromSF = (it, sf) => { if (!sf) return; it.owner = sf.owner || it.owner; it.status = sf.status || it.status; it.notice = pDate(sf.notice_date) || it.notice; if (L.tickets) it.tickets = tk[sf.account_id] || []; };
+  // usage export becomes the Loaded set and the day-one store
+  let dayOne = DATA.dayOne, dayOneW1 = DATA.dayOneW1;
+  if (L.usage) {
+    const RUN = L.usage.date, w1 = E.iso(E.dn(RUN) - 84); const d1 = {};
+    L.usage.rows.forEach(r => {
+      const sf = sfFor(r.account_id, r.account_name);
+      const v = W12('active_vehicles_w').map(c => pNum(r[c])), l = W12('logins_w').map(c => pNum(r[c]));
+      d1[r.account_id] = { name: r.account_name, cv: pNum(r.contracted_vehicles), v, l };
+      const it = { id: r.account_id, name: r.account_name, owner: sf ? sf.owner : (r.account_manager || null), decision: RUN, w1, cv: pNum(r.contracted_vehicles),
+        fleet: sf ? sf.fleet_type : null, value: sf ? pNum(sf.annual_value) : null, renewal: sf ? pDate(sf.renewal_date) : null, parent: sf && sf.parent_account ? sf.parent_account : null,
+        email: null, v, l, status: sf ? sf.status : null, notice: sf ? pDate(sf.notice_date) : null, insf: !!sf, set: 'loaded', tests: null, tickets: sf ? (tk[sf.account_id] || []) : [] };
+      S.items['L:' + r.account_id] = Object.assign(it, { id: r.account_id }); S.sets.loaded.push('L:' + r.account_id);
+    });
+    // keys for the loaded set are prefixed so they never collide with test IDs
+    S.sets.loaded.forEach(k => { S.items[k].key = k; });
+    if (w1 === DATA.dayOneW1) { dayOne = d1; dayOneW1 = w1; }
+    S.loadedEnv = { dayOne: d1, dayOneW1: w1, sfParent, incidents };
+  } else S.loadedEnv = null;
+  // Door 3 files overlay the test set
+  if (L.screen) L.screen.rows.forEach(r => {
+    let it = S.items[r.account_id];
+    if (!it || it.set !== 'test') { it = { id: r.account_id, name: r.account_name, owner: null, insf: true, status: 'Active', notice: null, set: 'test', tests: 'Loaded item, no answer of record', tickets: [] }; S.items[r.account_id] = it; S.sets.test.push(r.account_id); }
+    it.name = r.account_name || it.name; it.decision = pDate(r.decision_date); it.w1 = pDate(r.window_w1_starts) || E.iso(E.dn(it.decision) - 84);
+    it.cv = pNum(r.contracted_vehicles); it.v = W12('active_vehicles_w').map(c => pNum(r[c])); it.l = W12('logins_w').map(c => pNum(r[c]));
+  });
+  S.sets.test.forEach(id => {
+    const it = S.items[id]; if (L.sf) fromSF(it, sfFor(id, it.name)); else if (L.tickets && tk[id]) it.tickets = tk[id];
+    const cx = L.context && L.context.rows.find(r => r.account_id === id);
+    if (cx) { it.fleet = cx.fleet_type || it.fleet; it.renewal = pDate(cx.renewal_date) || it.renewal; it.value = pNum(cx.annual_value) ?? it.value; it.parent = cx.parent_account || null; it.email = pDate(cx.last_email_from_fleet_manager); }
+  });
+  S.env = { dayOne, dayOneW1, sfParent, incidents };
+  S.base = {}; Object.entries(S.items).forEach(([k, v]) => S.base[k] = clone(v));
+  if (S.sets.loaded.length) { S.set = 'loaded'; S.sel = S.sets.loaded[0]; }
+  recompute(true); setView(S.sets.loaded.length ? 'list' : 'acct'); renderAll();
+  if (S.sets.loaded.length) { S.sel = S.sets.loaded.slice().sort((a, b) => VORDER[S.res[a].verdict] - VORDER[S.res[b].verdict])[0]; renderAll(); }
+}
+function unload() {
+  S.loaded = {}; S.items = {}; S.base = {}; S.sets = { test: [], stress: [], loaded: [] }; S.edited.clear(); S.human = {};
+  DATA.items.forEach(it => { S.base[it.id] = clone(it); S.items[it.id] = clone(it); S.sets[it.set].push(it.id); });
+  S.env = { dayOne: clone(DATA.dayOne), dayOneW1: DATA.dayOneW1, sfParent: DATA.sfParent, incidents: DATA.incidents }; S.loadedEnv = null;
+  S.set = 'test'; S.sel = 'LKS-1024'; recompute(true); setView('acct'); renderAll(); toast('Back to built-in inputs.');
+}
+
+/* ---------------- results + monday ---------------- */
+const CAUSES = [
+  { n: 'Missed something Marcus knows', c: 'Real drops, but the fleet manager had just written.', fix: 'email', rows: [['LKS-1037', 'City of Wexbridge'], ['LKS-1034', 'Oriel Valley Express'], ['LKS-1066', 'Cedar Hollow Public Works']], t: '<b>Rule 9</b> now asks the owner first when the fleet manager wrote in the last 10 days. It reads the date only, never the email.' },
+  { n: 'Asked when it should have decided', c: 'Both hit OPEN rules, so the agent asked.', fix: null, rows: [['LKS-378', 'Redfern Freight', 'rekey'], ['LKS-1027', 'Tallgrass Unified School District', 'school']], t: '<b>Rule 7</b> stitches an old ID that reads 0 the week a same-name ID starts, in Marcus\u2019s own words. <b>Rule 5</b> calls a school fleet still under 50% from Sep 7.' },
+  { n: 'A rule decided wrong', c: 'The group total hid a partial loss.', fix: 'merger', rows: [['LKS-1030', 'Pinecrest Hauling']], t: '57 trucks left, about 30 arrived at the parent. <b>Rule 6</b> now ignores a merger drop only if the siblings cover 75% of the fall; otherwise it asks the owner with both counts.' }
+];
+(function results() {
+  const P = v => (v / 30 * 100) + '%';
+  $('#scale').innerHTML = `<div class="ax"></div>
+    <div class="band" style="left:${P(17)};width:calc(${P(29)} - ${P(17)})"><span>Six tables scored 17 to 29</span></div>
+    ${[0, 5, 10, 15, 20, 25, 30].map(t => `<span class="tick" style="left:${P(t)}">${t}</span>`).join('')}
+    <div class="pin bar" style="left:${P(27)}"><b>27</b><span>course bar</span></div>
+    <div class="pin" style="left:${P(24)};color:var(--call)"><b>24</b><span>first run</span></div>
+    <div class="pin" style="left:${P(30)};color:var(--hit)"><b>30</b><span>final</span></div>`;
+  $('#causes').innerHTML = CAUSES.map(c => `<div class="cause"><div><div class="cn">${c.n}</div><div class="cc">${c.c}</div></div>
+    <div class="rows">${c.rows.map(([id, nm, fx]) => { const it = S.base[id]; return `<div class="crow"><div><div style="font-weight:600">${nm}</div>
+      <div class="flip"><s class="c-${VC[it.v1.verdict]}">${it.v1.verdict}</s><span class="faint">to</span><b class="c-${VC[it.rec.verdict]}">${it.rec.verdict}</b></div></div>
+      <button class="btn sm" data-replay="${id}" data-fix="${fx || c.fix}">Replay the miss</button></div>`; }).join('')}</div>
+    <div class="fixt">${c.t}</div></div>`).join('') + `<p class="small muted" style="margin-top:16px">Course-wide, 22 of 37 misses were \u201casked when it should have decided.\u201d</p>`;
+  const NAMES = { email: 'Rule 9\u2019s email check', rekey: 'Rule 7\u2019s re-key stitch', school: 'Rule 5\u2019s school-fleet callback', merger: 'Rule 6\u2019s merger coverage' };
+  $('#causes').addEventListener('click', e => {
+    const b = e.target.closest('[data-replay]'); if (!b) return;
+    S.policy = clone(E.DEFAULT); S.policy.fix[b.dataset.fix] = false; S.set = 'test'; S.sel = b.dataset.replay; S.editing = false;
+    recompute(false); setView('acct'); renderAll(); $('#pol').open = true;
+    document.getElementById('console').scrollIntoView({ behavior: reduce ? 'auto' : 'smooth' });
+    toast(`${NAMES[b.dataset.fix]} is off, as on the first run. Switch it back on under Policy.`);
+  });
+  $('#liveFeed').onclick = () => {
+    S.policy = clone(E.DEFAULT); S.policy.feed.email = false; S.set = 'test'; S.sel = 'LKS-1037'; S.editing = false;
+    recompute(false); setView('acct'); renderAll(); $('#pol').open = true;
+    document.getElementById('console').scrollIntoView({ behavior: reduce ? 'auto' : 'smooth' });
+    toast('No email-date feed, as on a live Monday. Wexbridge becomes a call.');
+  };
+})();
+
+/* ---------------- nav highlight ---------------- */
+(function navspy() {
+  const links = [...document.querySelectorAll('.nav a.l')];
+  const io = new IntersectionObserver(es => es.forEach(en => {
+    if (en.isIntersecting) links.forEach(a => a.classList.toggle('on', a.getAttribute('href') === '#' + en.target.id && !a.classList.contains('run')));
+  }), { rootMargin: '-45% 0px -50% 0px' });
+  document.querySelectorAll('section[id]').forEach(s => io.observe(s));
+})();
+
+buildPolicy(); recompute(true); setView('acct'); renderAll();
+})();
+
+</script>
+</body>
+</html>
